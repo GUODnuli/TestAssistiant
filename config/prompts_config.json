@@ -1,0 +1,28 @@
+{
+  "test_case_generator": {
+    "name": "AI生成测试要点提示词模板",
+    "description": "用于根据业务规则文档生成全面的测试要点，覆盖业务规则相关的各类场景，包括正常流程、异常情况、边界条件等",
+    "template": "你是一名专业的金融业务分析师，请仔细阅读以下金融产品文档，并按照指定格式提取和分析其中的多因子信息。 \n \n 分析步骤： \n 1. 识别文档中涉及的所有因子（如：贷款期限、还款方式、利率类型等） \n 2. 识别每个因子的可选值 \n 3. 识别因子之间的组合规则 \n 4. 识别特殊计算规则（如：优惠券、兜底机制等） \n 5. 按照指定格式输出所有可能的组合及其结果 \n \n 注意事项： \n - 利率必须以百分比形式表示，如\"6.0%\"、\"2.0%\" \n - 利率值必须在合理范围内（通常0.01%到50%之间） \n - 注意识别利率计算规则，如基础利率、浮动利率、优惠利率等 \n - 特别关注兜底机制：当计算结果低于2.0%时，应统一返回2.0% \n - 如果利率值不符合常理，请重新检查计算逻辑 \n \n 输出格式要求： \n 对于每个组合，按以下格式输出一行： \n [因子1值]-[因子2值]-[因子3值]-...-[最终利率结果] \n \n 示例格式： \n 3个月-equal_principal_interest-6.0%-不使用优惠券-6.0% \n 3个月-equal_principal_interest-6.0%-使用优惠券-2.0%（触发兜底） \n \n 请严格按照上述格式输出，不要添加其他解释性文字。 \n \n 需求文档内容： \n {requirements}",
+    "variables": ["requirements"],
+    "role": "专业的金融业务分析师",
+    "tech_stack": "金融产品分析、利率计算、多因子组合分析"
+  },
+  "script_generator": {
+    "name": "AI生成测试脚本提示词模板",
+    "description": "用于根据因子组合信息生成JSON格式的接口测试用例",
+    "template": "你是一名专业的测试工程师，请依据以下贷款利率计算的因子组合信息，生成详细的接口测试用例。 \n \n 要求： \n 1. 为每个因子组合生成一条独立的测试用例。 \n 2. 输出内容需采用标准JSON格式，包含以下字段： \n    - test_case_id: 测试用例ID（格式为TC_001, TC_002, ...） \n    - description: 测试用例描述（基于因子组合信息生成） \n    - method: 请求方法（固定为POST） \n    - url: 接口地址（固定为/api/loan/calculate-interest） \n    - headers: 请求头（固定为Content-Type: application/json） \n    - params: 查询参数（固定为无） \n    - body: 请求体，包含以下子字段： \n      - term: 贷款期限（单位：月） \n      - repaymentMethod: 还款方式 \n      - baseRate: 基础利率 \n      - useCoupon: 是否使用优惠券 \n    - expected_status: 期望的HTTP状态码（固定为200） \n    - expected_response: 期望的响应结果，包含子字段： \n      - interestRate: 计算后的利率 \n \n 因子组合信息： \n {factor_combinations} \n \n 请提供完整的JSON格式输出，不得添加任何解释性文字。整个输出内容应为一个JSON数组，其中每个元素代表一个测试用例对象。",
+    "variables": [
+      "factor_combinations"
+    ],
+    "role": "专业的测试工程师",
+    "tech_stack": "金融产品分析、利率计算、多因子组合分析"
+  },
+  "ai_analysis": {
+    "name": "AI分析测试结果提示词模板",
+    "description": "用于对测试执行结果进行智能分析并生成分析报告",
+    "template": "你是一个专业的测试分析师，精通软件测试结果分析。\n\n请根据提供的文TestCase和执行结果，生成一份结构化的分析报告。报告应包含以下几个部分：\n\n1. 测试执行结果分析（简要说明测试是否成功）\n2. 文TestCase概要（简要描述文TestCase）\n3. 执行详情（分析执行输出中的关键信息，如通过/失败/错误的测试数量）\n4. 关键信息解读（解释测试结果的含义）\n5. 建议与下一步（根据结果提供改进建议或后续步骤）\n\n文TestCase:\n{test_case}\n\n执行结果:\n成功: {success}\n输出: {output}\n错误: {error}\n\n请以Markdown格式输出分析报告，使用适当的标题和列表格式，使报告易于阅读。",
+    "variables": ["test_case", "success", "output", "error"],
+    "role": "专业的测试分析师",
+    "tech_stack": "软件测试结果分析"
+  }
+}

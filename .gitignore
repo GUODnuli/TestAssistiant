@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+venv/
+python3.11/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Logs
+*.log
+logs/
+
+# Build files
+build/
+dist/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Byte code
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test results
+pytest_cache/
+coverage/
+allure-results/
+allure-report/
+
+# Editor backup files
+*.bak
+*.backup
+*.swp
+*~
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/

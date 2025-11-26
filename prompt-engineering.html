@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提示词工程展示 - AI TestGen Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 12px;
+            border: 1px solid #eef2f7;
+        }
+        
+        .tab-button {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #495057;
+            flex: 1;
+            text-align: center;
+            margin: 0 2px;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tab-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+        
+        .tab-text {
+            font-size: 14px;
+        }
+        
+        .tab-button:first-child {
+            margin-left: 0;
+        }
+        
+        .tab-button:last-child {
+            margin-right: 0;
+        }
+        
+        .tab-button:hover {
+            background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
+            border-color: #ced4da;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border-color: #2980b9;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .tab-button.active:hover {
+            background: linear-gradient(180deg, #2980b9 0%, #2573a7 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            border: 1px solid #eef2f7;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .prompt-detail {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #3498db;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .prompt-detail h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.1em;
+        }
+        
+        /* 区分传递给LLM的字段和备注信息字段 */
+        .llm-field {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #1976d2;
+        }
+        
+        .info-field {
+            background: linear-gradient(135deg, #f3e5f5 0%, #ce93d8 100%);
+            border-left: 4px solid #7b1fa2;
+            margin-bottom: 8px; /* 减小底部间距 */
+        }
+        
+        .prompt-detail {
+            margin-bottom: 8px; /* 减小底部间距 */
+            padding: 10px; /* 减小内边距 */
+            border-radius: 6px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #3498db;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .prompt-detail p {
+            margin: 5px 0; /* 减小段落间距 */
+            line-height: 1.5; /* 调整行高 */
+            color: #495057;
+            font-size: 15px;
+        }
+        
+        .template-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            overflow-x: auto;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid #3498db;
+            position: relative;
+        }
+        
+        /* 自定义滚动条样式 */
+        .template-content::-webkit-scrollbar {
+            height: 12px;
+            width: 12px;
+        }
+        
+        .template-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .template-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3498db, #2980b9);
+            border-radius: 10px;
+            border: 2px solid #2c3e50;
+        }
+        
+        .template-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #2980b9, #2573a7);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 22px;
+            color: #6c757d;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eef2f7;
+        }
+        
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 35px;
+            background: linear-gradient(135deg, #fadbd8 0%, #f8c9c4 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            font-size: 20px;
+            font-weight: 600;
+            border: 1px solid #e74c3c;
+        }
+        
+        .variables-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .variable-tag {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .variable-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .back-link:hover {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #3498db;
+            font-size: 1.8em;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px;
+            }
+            
+            .tab-button {
+                margin: 0;
+                width: 100%;
+                padding: 12px;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+            
+            .template-content {
+                padding: 15px;
+                font-size: 14px;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .prompt-detail h3 {
+                font-size: 1.1em;
+            }
+            
+            .variables-list {
+                gap: 10px;
+            }
+            
+            .variable-tag {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .tabs {
+                padding: 10px;
+            }
+            
+            .tab-button {
+                padding: 10px;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .template-content {
+                padding: 12px;
+                font-size: 13px;
+            }
+            
+            h2 {
+                font-size: 1.3em;
+            }
+            
+            .prompt-detail {
+                padding: 15px;
+            }
+            
+            .prompt-detail h3 {
+                font-size: 1em;
+            }
+            
+            .variable-tag {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI TestGen Pro</h1>
+            <p>智能测试用例生成与转换平台</p>
+        </header>
+        
+        <main>
+            <a href="index.html" class="back-link">← 返回主页</a>
+            
+            <h2>提示词工程展示</h2>
+            
+            <div id="prompt-tabs-container">
+                <div class="loading">正在加载提示词数据...</div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="api-config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从后端API获取提示词数据
+            fetch(`${ApiConfig.FRONTEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.PROMPTS}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderPromptTabs(data.prompts);
+                })
+                .catch(error => {
+                    console.error('Error loading prompts:', error);
+                    document.getElementById('prompt-tabs-container').innerHTML = 
+                        '<div class="error">加载提示词数据失败，请稍后重试。</div>';
+                });
+                
+            // 渲染提示词页签
+            function renderPromptTabs(prompts) {
+                const container = document.getElementById('prompt-tabs-container');
+                
+                if (!prompts || prompts.length === 0) {
+                    container.innerHTML = '<div class="error">暂无提示词数据。</div>';
+                    return;
+                }
+                
+                // 创建页签按钮和内容
+                let tabsHTML = '<div class="tabs">';
+                let contentHTML = '';
+                
+                prompts.forEach((prompt, index) => {
+                        // 页签按钮
+                        tabsHTML += `
+                            <button class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${prompt.id}">
+                                <span class="tab-text">${prompt.name}</span>
+                            </button>
+                        `;
+                    
+                    // 页签内容
+                    contentHTML += `
+                        <div id="tab-${prompt.id}" class="tab-content ${index === 0 ? 'active' : ''}">
+                            <div class="prompt-detail info-field">
+                                <p><strong>⚙️ 对应功能:</strong> ${prompt.function || '未指定'}</p>
+                            </div>
+                            
+                            <div class="prompt-detail info-field">
+                                <p><strong>🤖 AI角色:</strong> ${prompt.role || '未指定'}${prompt.techStack ? ' (技术栈: ' + prompt.techStack + ')' : ''}</p>
+                            </div>
+                            
+                            <div class="prompt-detail info-field">
+                                <p><strong>🎯 用途说明:</strong> ${prompt.purpose || '未指定'}</p>
+                            </div>
+                            
+                            <div class="prompt-detail info-field">
+                                <h3>🔧 变量参数</h3>
+                                <div class="variables-list">
+                                    ${prompt.variables && prompt.variables.length > 0 
+                                        ? prompt.variables.map(variable => `<span class="variable-tag">${variable}</span>`).join('')
+                                        : '<span class="variable-tag">无</span>'}
+                                </div>
+                            </div>
+                            
+                            <div class="prompt-detail info-field">
+                                <h3>📑 提示词模板</h3>
+                                <div class="template-content">${prompt.template}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                tabsHTML += '</div>';
+                
+                container.innerHTML = tabsHTML + contentHTML;
+                
+                // 添加页签切换事件
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        
+                        // 更新活动页签按钮
+                        document.querySelectorAll('.tab-button').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        
+                        // 更新活动页签内容
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        document.getElementById(`tab-${tabId}`).classList.add('active');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
