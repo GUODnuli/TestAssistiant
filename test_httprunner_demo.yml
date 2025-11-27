@@ -1,0 +1,26 @@
+config:
+  name: "HttpRunner 测试示例"
+  variables:
+    base_url: "https://httpbin.org"
+
+teststeps:
+  - name: 发送 GET 请求测试
+    request:
+      method: GET
+      url: $base_url/get
+      params:
+        test: httprunner
+    validate:
+      - eq: [status_code, 200]
+      - contains: [content.args.test, "httprunner"]
+
+  - name: 发送 POST 请求测试
+    request:
+      method: POST
+      url: $base_url/post
+      json:
+        username: test_user
+        password: test_password
+    validate:
+      - eq: [status_code, 200]
+      - eq: [content.json.username, "test_user"]
