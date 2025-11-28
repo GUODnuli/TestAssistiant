@@ -2,9 +2,8 @@ import os
 import json
 from typing import Dict, Any, Optional
 from langchain_community.chat_models import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
-from langchain_core.runnables import RunnablePassthrough
+from langchain.prompts import PromptTemplate
+from langchain.schema import StrOutputParser
 from config import Config
 
 class LangChainService:
@@ -99,8 +98,11 @@ class LangChainService:
         else:
             # 如果没有提供自定义模板，则返回错误信息
             return "错误：测试用例解析功能已被移除，请使用自定义提示词模板或test_case_generator模板。"
-        chain = prompt | self.llm | StrOutputParser()
-        return chain.invoke({"context": context, "input": input_text})
+        # 简化的chain创建方式
+        inputs = {"context": context, "input": input_text}
+        formatted_prompt = prompt.format(**inputs)
+        response = self.llm.invoke(formatted_prompt)
+        return response.content
 
     def generate_test_script(self, test_case: str, prompt_template: str = None) -> str:
         """生成测试脚本"""
@@ -110,15 +112,20 @@ class LangChainService:
         else:
             # 使用默认提示词模板
             prompt = self.create_script_generator_prompt()
-        chain = prompt | self.llm | StrOutputParser()
-        # 传递factor_combinations变量以匹配更新后的提示词模板
-        return chain.invoke({"factor_combinations": test_case})
+        # 简化的chain创建方式
+        inputs = {"factor_combinations": test_case}
+        formatted_prompt = prompt.format(**inputs)
+        response = self.llm.invoke(formatted_prompt)
+        return response.content
 
     def generate_test_cases_from_rules(self, requirements: str) -> str:
         """根据需求生成测试用例"""
         prompt = self.create_test_case_generator_prompt()
-        chain = prompt | self.llm | StrOutputParser()
-        return chain.invoke({"requirements": requirements})
+        # 简化的chain创建方式
+        inputs = {"requirements": requirements}
+        formatted_prompt = prompt.format(**inputs)
+        response = self.llm.invoke(formatted_prompt)
+        return response.content
 
     def analyze_test_results(self, test_case: str, execution_result, prompt_template: str = None) -> str:
         """分析测试结果"""
@@ -128,13 +135,16 @@ class LangChainService:
         else:
             # 使用默认提示词模板
             prompt = self.create_ai_analysis_prompt()
-        chain = prompt | self.llm | StrOutputParser()
-        return chain.invoke({
+        # 简化的chain创建方式
+        inputs = {
             "test_case": test_case,
             "success": execution_result.success,
             "output": execution_result.output,
             "error": execution_result.error or ""
-        })
+        }
+        formatted_prompt = prompt.format(**inputs)
+        response = self.llm.invoke(formatted_prompt)
+        return response.content
 
     def extract_test_cases_from_excel(self, file_path: str) -> str:
         """从Excel文件中提取测试用例"""

@@ -1,0 +1,23 @@
+[
+  {
+    "username": "testuser1",
+    "password": "password123",
+    "expected_nickname": "测试用户1",
+    "expected_avatar_url": "https://example.com/avatar1.jpg",
+    "should_succeed": true
+  },
+  {
+    "username": "testuser2",
+    "password": "wrongpassword",
+    "expected_nickname": "",
+    "expected_avatar_url": "",
+    "should_succeed": false
+  },
+  {
+    "username": "nonexistentuser",
+    "password": "anypassword",
+    "expected_nickname": "",
+    "expected_avatar_url": "",
+    "should_succeed": false
+  }
+]

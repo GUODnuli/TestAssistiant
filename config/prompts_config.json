@@ -1,21 +1,19 @@
 {
   "test_case_generator": {
     "name": "AI生成测试要点提示词模板",
-    "description": "用于根据业务规则文档生成全面的测试要点，覆盖业务规则相关的各类场景，包括正常流程、异常情况、边界条件等",
-    "template": "你是一名专业的金融业务分析师，请仔细阅读以下金融产品文档，并按照指定格式提取和分析其中的多因子信息。 \n \n 分析步骤： \n 1. 识别文档中涉及的所有因子（如：贷款期限、还款方式、利率类型等） \n 2. 识别每个因子的可选值 \n 3. 识别因子之间的组合规则 \n 4. 识别特殊计算规则（如：优惠券、兜底机制等） \n 5. 按照指定格式输出所有可能的组合及其结果 \n \n 注意事项： \n - 利率必须以百分比形式表示，如\"6.0%\"、\"2.0%\" \n - 利率值必须在合理范围内（通常0.01%到50%之间） \n - 注意识别利率计算规则，如基础利率、浮动利率、优惠利率等 \n - 特别关注兜底机制：当计算结果低于2.0%时，应统一返回2.0% \n - 如果利率值不符合常理，请重新检查计算逻辑 \n \n 输出格式要求： \n 对于每个组合，按以下格式输出一行： \n [因子1值]-[因子2值]-[因子3值]-...-[最终利率结果] \n \n 示例格式： \n 3个月-equal_principal_interest-6.0%-不使用优惠券-6.0% \n 3个月-equal_principal_interest-6.0%-使用优惠券-2.0%（触发兜底） \n \n 请严格按照上述格式输出，不要添加其他解释性文字。 \n \n 需求文档内容： \n {requirements}",
+    "description": "用于根据金融产品文档提取和分析多因子信息，生成符合指定格式的组合结果",
+    "template": "你是一个专业的金融业务分析师，请仔细阅读以下金融产品文档，并按照指定格式提取和分析其中的多因子信息。 \n \n 分析步骤： \n 1. 识别文档中涉及的所有因子（如：贷款期限、还款方式、利率类型等） \n 2. 识别每个因子的可选值 \n 3. 识别因子之间的组合规则 \n 4. 识别特殊计算规则（如：优惠券、兜底机制等） \n 5. 按照指定格式输出所有可能的组合及其结果 \n \n 注意事项： \n - 利率必须以百分比形式表示，如\"6.0%\"、\"2.0%\" \n - 利率值必须在合理范围内（通常0.01%到50%之间） \n - 注意识别利率计算规则，如基础利率、浮动利率、优惠利率等 \n - 特别关注兜底机制：当计算结果低于2.0%时，应统一返回2.0% \n - 如果利率值不符合常理，请重新检查计算逻辑 \n \n 输出格式要求： \n 对于每个组合，按以下格式输出一行： \n [因子1值]-[因子2值]-[因子3值]-...-[最终利率结果] \n \n 示例格式： \n 3个月-equal_principal_interest-6.0%-不使用优惠券-6.0% \n 3个月-equal_principal_interest-6.0%-使用优惠券-2.0%（触发兜底） \n \n 请严格按照上述格式输出，不要添加其他解释性文字。 \n \n 需求文档内容： \n {requirements}",
     "variables": ["requirements"],
     "role": "专业的金融业务分析师",
-    "tech_stack": "金融产品分析、利率计算、多因子组合分析"
+    "tech_stack": "金融产品分析、多因子分析、利率计算"
   },
   "script_generator": {
     "name": "AI生成测试脚本提示词模板",
-    "description": "用于根据因子组合信息生成JSON格式的接口测试用例",
-    "template": "你是一名专业的测试工程师，请依据以下贷款利率计算的因子组合信息，生成详细的接口测试用例。 \n \n 要求： \n 1. 为每个因子组合生成一条独立的测试用例。 \n 2. 输出内容需采用标准JSON格式，包含以下字段： \n    - test_case_id: 测试用例ID（格式为TC_001, TC_002, ...） \n    - description: 测试用例描述（基于因子组合信息生成） \n    - method: 请求方法（固定为POST） \n    - url: 接口地址（固定为/api/loan/calculate-interest） \n    - headers: 请求头（固定为Content-Type: application/json） \n    - params: 查询参数（固定为无） \n    - body: 请求体，包含以下子字段： \n      - term: 贷款期限（单位：月） \n      - repaymentMethod: 还款方式 \n      - baseRate: 基础利率 \n      - useCoupon: 是否使用优惠券 \n    - expected_status: 期望的HTTP状态码（固定为200） \n    - expected_response: 期望的响应结果，包含子字段： \n      - interestRate: 计算后的利率 \n \n 因子组合信息： \n {factor_combinations} \n \n 请提供完整的JSON格式输出，不得添加任何解释性文字。整个输出内容应为一个JSON数组，其中每个元素代表一个测试用例对象。",
-    "variables": [
-      "factor_combinations"
-    ],
+    "description": "用于根据因子组合信息生成HttpRunner规范的YAML格式接口测试用例",
+    "template": "你是一个专业的测试工程师，请根据以下贷款利率计算的因子组合信息，生成详细的接口测试用例。\n\n要求：\n1. 每个因子组合生成一条测试用例\n2. 输出标准的YAML格式，遵循HttpRunner测试用例规范\n3. YAML结构应包含以下部分：\n   - config部分：\n     * name: 测试用例名称（基于因子组合信息生成）\n     * variables: 包含base_url变量，值为\"http://192.168.43.138:5000\"\n     * verify: false\n   - teststeps部分：\n     * 每个因子组合生成一个测试步骤\n     * name: 测试步骤名称（格式：TC_001 - 描述）\n     * request部分：\n       - method: 请求方法 (POST)\n       - url: $base_url/calculate_rate （注意不要添加额外的斜杠）\n       - headers: Content-Type: application/json\n       - json: 请求体，包含:\n         * term: 贷款期限（月），字符串类型\n         * repayment_method: 还款方式，字符串类型\n         * use_coupon: 优惠券折扣，整数类型，枚举值为0或20（0代表不使用优惠券，20代表使用2折优惠券）\n     * validate部分：\n       - eq: [\"status_code\", 200]\n       - eq: [\"body.rate\", 期望的利率值]，数值类型，不包含百分号\n\n因子组合信息：\n{factor_combinations}\n\n请提供完整的YAML格式输出，不要添加其他解释性文字。整个输出应该是一个符合HttpRunner规范的YAML测试用例文件。\n只输出YAML内容，不要包含任何额外的解释、说明或格式标记（如```yaml）。\n注意：在json请求体中不要包含baseRate字段；useCoupon字段为整数枚举值（0或20）；在validate断言中，body.interestRate应为数值类型。",
+    "variables": ["factor_combinations"],
     "role": "专业的测试工程师",
-    "tech_stack": "金融产品分析、利率计算、多因子组合分析"
+    "tech_stack": "HTTP接口测试、HttpRunner框架、YAML格式、多因子测试分析"
   },
   "ai_analysis": {
     "name": "AI分析测试结果提示词模板",

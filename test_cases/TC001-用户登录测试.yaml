@@ -1,0 +1,4 @@
+id: TC001
+name: 用户登录测试
+content: "name: 用户登录测试\nbase_url: http://localhost:8000\nvariables:\n  username: testuser\n\
+  \  password: testpass\n"

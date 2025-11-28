@@ -1,0 +1,85 @@
+config:
+  name: "AI测试用例转换服务测试套件"
+  base_url: "http://localhost:8003"
+  variables:
+    test_case_desc: "测试用户登录功能，验证用户名密码正确时返回200状态码"
+    test_script_content: >-
+      import unittest
+      import requests
+
+      class TestLogin(unittest.TestCase):
+          def test_successful_login(self):
+              url = 'http://example.com/login'
+              data = {'username': 'test_user', 'password': 'test_pass'}
+              response = requests.post(url, data=data)
+              self.assertEqual(response.status_code, 200)
+
+teststeps:
+  - name: 测试健康检查接口
+    request:
+      method: GET
+      url: /health
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.status, "healthy"]
+
+  - name: 测试转换单个测试用例接口
+    request:
+      method: POST
+      url: /api/v1/convert-test-case
+      headers:
+        Content-Type: application/json
+      json:
+        test_case_description: $test_case_desc
+        template_type: pytest
+        generation_type: script
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.status, "success"]
+      - type_match: [body.generated_script, str]
+
+  - name: 测试批量转换测试用例接口
+    request:
+      method: POST
+      url: /api/v1/batch-convert
+      headers:
+        Content-Type: application/json
+      json:
+        test_cases:
+          - $test_case_desc
+          - "测试用户注册功能，验证必填字段为空时返回400状态码"
+        template_type: pytest
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.status, "success"]
+      - type_match: [body.results, list]
+      - len_eq: [body.results, 2]
+
+  - name: 测试执行测试脚本接口
+    request:
+      method: POST
+      url: /api/v1/execute-test
+      headers:
+        Content-Type: application/json
+      json:
+        script_content: $test_script_content
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.success, true]
+
+  - name: 测试分析测试结果接口
+    request:
+      method: POST
+      url: /api/v1/analyze-results
+      headers:
+        Content-Type: application/json
+      json:
+        test_case: $test_case_desc
+        execution_result:
+          success: true
+          output: "Test passed!"
+          error: null
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.success, true]
+      - type_match: [body.analysis, str]
