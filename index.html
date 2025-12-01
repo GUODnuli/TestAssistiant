@@ -113,14 +113,16 @@
             <section class="region region-2">
                 <h2>执行测试脚本</h2>
                 <div class="region-content">
+                    <div class="button-group" style="margin-bottom: 15px;">
+                        <button id="copy-btn">复制脚本</button>
+                        <button id="execute-btn" style="display: none;">执行测试脚本</button>
+                    </div>
                     <div id="script-display-section" style="display: none;">
                         <h3>生成的自动化测试脚本</h3>
                         <div class="script-container">
                             <pre><code id="generated-script"></code></pre>
                         </div>
-                        <button id="copy-btn">复制脚本</button>
                     </div>
-                    <button id="execute-btn" style="display: none;">执行测试脚本</button>
                 </div>
             </section>
             
@@ -138,9 +140,9 @@
                             <pre><code id="response-content" class="response-content"></code></pre>
                         </div>
                     </div>
-                    <!-- Allure测试报告展示区域 -->
+                    <!-- HTML测试报告展示区域 -->
                     <div style="margin-top: 30px;">
-                        <button id="view-report-btn" style="display: none;">查看Allure测试报告</button>
+                        <button id="view-report-btn" style="display: none;">查看HTML测试报告</button>
                         <div id="report-container" style="display: none; margin-top: 20px;">
                             <iframe id="allure-report-frame" src="" width="100%" height="600" frameborder="0"></iframe>
                         </div>

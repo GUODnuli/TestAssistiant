@@ -1,0 +1,43 @@
+config:
+  name: "公共API测试套件"
+  base_url: "https://httpbin.org"
+
+teststeps:
+  - name: 测试GET请求
+    request:
+      method: GET
+      url: /get
+    validate:
+      - eq: [status_code, 200]
+      - type_match: [body.args, dict]
+      - type_match: [body.headers, dict]
+
+  - name: 测试POST请求
+    request:
+      method: POST
+      url: /post
+      headers:
+        Content-Type: application/json
+      json:
+        username: "test_user"
+        password: "test_password"
+    validate:
+      - eq: [status_code, 200]
+      - eq: [body.json.username, "test_user"]
+      - eq: [body.json.password, "test_password"]
+
+  - name: 测试状态码404
+    request:
+      method: GET
+      url: /status/404
+    validate:
+      - eq: [status_code, 404]
+
+  - name: 测试延迟响应
+    request:
+      method: GET
+      url: /delay/1
+      timeout: 5
+    validate:
+      - eq: [status_code, 200]
+      - type_match: [body.url, str]

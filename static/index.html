@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI TestGen Pro - 智能测试用例生成与转换平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .header-links {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header-link {
+            flex: 1;
+            background-color: #e3f2fd; /* 浅蓝色背景 */
+            border: 1px solid #bbdefb; /* 浅蓝色边框 */
+            border-radius: 5px;
+            padding: 15px 10px;
+            margin: 0 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            color: #0d47a1; /* 深蓝色文字 */
+            text-decoration: none;
+        }
+        
+        .header-link:first-child {
+            margin-left: 0;
+        }
+        
+        .header-link:last-child {
+            margin-right: 0;
+        }
+        
+        .header-link:hover {
+            background-color: #bbdefb; /* 悬停时的浅蓝色 */
+            border-color: #90caf9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI TestGen Pro</h1>
+            <p>智能测试用例生成与转换平台</p>
+            <div class="header-links">
+                <a href="tool-intro.html" class="header-link" target="_blank">工具介绍</a>
+                <a href="prompt-engineering.html" class="header-link" target="_blank">提示词工程展示</a>
+            </div>
+        </header>
+        
+        <!-- 步骤切换导航栏 -->
+        <div class="steps-navigation">
+            <div class="step-tabs">
+                <button class="step-tab active" data-step="0">AI生成测试要点</button>
+                <button class="step-tab" data-step="1">AI生成测试脚本</button>
+                <button class="step-tab" data-step="2">执行测试脚本</button>
+                <button class="step-tab" data-step="3">查看测试报告</button>
+                <button class="step-tab" data-step="4">AI分析测试结果</button>
+            </div>
+            <div class="core-principles">
+                <p>核心原理说明：本系统融合<strong style="color: #e74c3c;">AI</strong>智能与<strong style="color: #e74c3c;">Tools</strong>工具集，重新定义<strong style="color: #e74c3c;">自动化测试</strong>。<strong style="color: #e74c3c;">AI</strong>深度理解<strong style="color: #e74c3c;">业务需求</strong>，智能生成精准<strong style="color: #e74c3c;">测试用例</strong>，并对<strong style="color: #e74c3c;">执行结果</strong>进行深度分析；<strong style="color: #e74c3c;">Tools</strong>工具集则高效执行测试脚本，确保每个细节都被精确验证。两者协同工作，让复杂的<strong style="color: #e74c3c;">测试流程</strong>变得简单高效，释放测试人员创造力，专注更高价值的<strong style="color: #e74c3c;">测试工作</strong>。</p>
+            </div>
+        </div>
+        
+        <main>
+            <!-- 新增区域: 根据业务规则文档生成文本案例 -->
+            <section class="region region-0">
+                <h2>AI生成测试要点</h2>
+                <div class="region-content">
+                    <!-- 文件上传控件 -->
+                    <div class="file-upload-section" style="margin: 15px 0;">
+                        <label for="business-rules-file">或选择上传业务规则文件：</label>
+                        <input type="file" id="business-rules-file" accept=".txt,.doc,.docx,.pdf,.xlsx,.xls"/>
+                        <small class="file-upload-note">支持 TXT, DOC, DOCX, PDF, XLSX, XLS 格式</small>
+                    </div>
+                    
+                    <label for="business-rules-input">请粘贴业务规则文档内容：</label>
+                    <textarea id="business-rules-input" placeholder="请在此粘贴您的业务规则文档内容..."></textarea>
+                    
+                    <button id="generate-from-rules-btn">AI生成测试要点</button>
+                    <div id="generated-test-cases" style="display: none; margin-top: 20px;">
+                        <h3>生成的测试要点</h3>
+                        <div class="test-cases-container">
+                            <pre><code id="test-cases-content"></code></pre>
+                        </div>
+                        <button id="use-test-cases-btn" style="display: none;">使用这些测试要点</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 区域1: 文本案例信息 -->
+            <section class="region region-1">
+                <h2>AI生成测试脚本</h2>
+                <div class="region-content">
+                    <label for="test-case-input">文本案例信息</label>
+                    <textarea id="test-case-input" placeholder="例如：验证用户能够成功访问网站首页并正确加载页面元素。测试包括：1. 向 https://example.com/ 发送GET请求；2. 验证返回状态码为200；3. 验证页面标题包含'首页'；4. 验证页面包含关键元素如导航栏、搜索框等。"></textarea>
+                    <button id="generate-btn">AI生成测试脚本</button>
+                </div>
+            </section>
+            
+            <!-- 区域2: 自动化脚本执行运行区域 -->
+            <section class="region region-2">
+                <h2>执行测试脚本</h2>
+                <div class="region-content">
+                    <div class="button-group" style="margin-bottom: 15px;">
+                        <button id="copy-btn">复制脚本</button>
+                        <button id="execute-btn" style="display: none;">执行测试脚本</button>
+                    </div>
+                    <div id="script-display-section" style="display: none;">
+                        <h3>生成的自动化测试脚本</h3>
+                        <div class="script-container">
+                            <pre><code id="generated-script"></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 区域3: 执行结果与应答报文展示区域 -->
+            <section class="region region-3">
+                <h2>查看测试报告</h2>
+                <div class="region-content">
+                    <div class="execution-output" id="execution-output" style="display: none;">
+                        <h3>执行结果</h3>
+                        <pre><code id="execution-log" class="execution-log"></code></pre>
+                    </div>
+                    <div class="response-section" id="response-section" style="display: none;">
+                        <h3>应答报文</h3>
+                        <div class="response-container">
+                            <pre><code id="response-content" class="response-content"></code></pre>
+                        </div>
+                    </div>
+                    <!-- HTML测试报告展示区域 -->
+                    <div style="margin-top: 30px;">
+                        <button id="view-report-btn" style="display: none;">查看HTML测试报告</button>
+                        <div id="report-container" style="display: none; margin-top: 20px;">
+                            <iframe id="allure-report-frame" src="" width="100%" height="600" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 区域4: AI 结果分析区域 -->
+            <section class="region region-4">
+                <h2>AI分析测试结果</h2>
+                <div class="region-content">
+                    <button id="ai-analysis-btn" style="display: none;">AI分析测试结果</button>
+                    <div class="ai-analysis-section" id="ai-analysis-section" style="display: none;">
+                        <h3>AI 分析结果</h3>
+                        <div class="ai-analysis-container">
+                            <div id="ai-analysis-content" class="ai-analysis-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+
+        </main>
+    </div>
+    
+    <!-- 使用备用CDN源加载mammoth.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js" onerror="console.warn('mammoth.js加载失败，将使用后端处理DOCX文件')"></script>
+    <script src="api-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

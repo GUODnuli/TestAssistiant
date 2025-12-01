@@ -3,8 +3,11 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
+// 导入API配置，使用相对路径
+const ApiConfig = require('./api-config').ApiConfig;
+
 const app = express();
-const PORT = 8080;
+const PORT = ApiConfig.PORT.FRONTEND_PORT;
 
 // 启用CORS
 app.use(cors());
@@ -68,5 +71,5 @@ app.get(/^(?!\/api).*/, (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on ${ApiConfig.FRONTEND_SERVICE_URL}`);
 });

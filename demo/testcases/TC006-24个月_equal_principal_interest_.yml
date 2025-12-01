@@ -1,0 +1,19 @@
+config:
+  name: 贷款利率计算测试 - 24个月等额本息使用优惠券触发兜底
+  variables:
+    base_url: "http://192.168.43.138:5000"
+  verify: false
+teststeps:
+  - name: TC_001 - 24个月-equal_principal_interest-使用优惠券-触发兜底利率2.0%
+    request:
+      method: POST
+      url: $base_url/calculate_rate
+      headers:
+        Content-Type: application/json
+      json:
+        term: "24"
+        repayment_method: "equal_principal_interest"
+        use_coupon: 20
+    validate:
+      - eq: ["status_code", 200]
+      - eq: ["body.rate", 2.0]

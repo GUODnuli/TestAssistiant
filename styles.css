@@ -249,6 +249,18 @@ button {
     margin-right: 10px;
 }
 
+/* 按钮组样式 */
+.button-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.button-group button {
+    margin: 0;
+}
+
 button:hover {
     background-color: #2980b9;
 }

@@ -22,8 +22,8 @@ class Config:
     
     # 服务配置
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8002"))
-    BACKEND_SERVICE_URL: str = os.getenv("BACKEND_SERVICE_URL", "http://localhost:8002")
+    PORT: int = int(os.getenv("PORT", "8003"))
+    BACKEND_SERVICE_URL: str = os.getenv("BACKEND_SERVICE_URL", "http://localhost:8003")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     
     # LangChain配置

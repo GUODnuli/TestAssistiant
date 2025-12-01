@@ -25,14 +25,15 @@ const aiAnalysisSection = document.getElementById('ai-analysis-section');
 const aiAnalysisContent = document.getElementById('ai-analysis-content');
 const viewReportBtn = document.getElementById('view-report-btn');
 const reportContainer = document.getElementById('report-container');
-const allureReportFrame = document.getElementById('allure-report-frame');
+const testReportFrame = document.getElementById('allure-report-frame');
 
 // 生成自动化测试脚本的函数
 async function generateTestScript(testCase) {
     try {
         // 构建请求体（不包含自定义提示词模板）
         const requestBody = {
-            test_case_description: testCase
+            test_case_description: testCase,
+            generation_type: "test_data"  // 添加test_data参数
         };
 
         const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.CONVERT_TEST_CASE}`, {
@@ -49,7 +50,8 @@ async function generateTestScript(testCase) {
         }
 
         const data = await response.json();
-        return data.generated_script;
+        // 返回测试数据或脚本内容
+        return data.generated_test_data || data.generated_script || null;
     } catch (error) {
         console.error('生成脚本时出错:', error);
         throw new Error(`生成脚本时发生错误: ${error.message}`);
@@ -93,20 +95,28 @@ async function executeTestScript(script) {
         
         const data = await response.json();
         
+        // 存储报告路径到按钮的dataset中
+        if (data.report_path) {
+            viewReportBtn.dataset.reportPath = data.report_path;
+            console.log('存储报告路径:', data.report_path);
+        }
+        
         // 构造响应报文
         const responsePayload = {
             status: data.success ? "success" : "failure",
             data: {
                 success: data.success,
                 output: data.output,
-                error: data.error
+                error: data.error,
+                report_path: data.report_path // 添加报告路径到响应中
             },
             timestamp: new Date().toISOString()
         };
         
         return {
             result: data.output,
-            response: JSON.stringify(responsePayload, null, 2)
+            response: JSON.stringify(responsePayload, null, 2),
+            reportPath: data.report_path
         };
     } catch (error) {
         console.error('执行脚本时出错:', error);
@@ -279,8 +289,8 @@ generateBtn.addEventListener('click', async () => {
         // 生成自动化测试脚本
         const script = await generateTestScript(testCase);
         
-        // 显示生成的脚本
-        generatedScript.textContent = script;
+        // 显示生成的脚本或测试数据信息
+        generatedScript.textContent = script || '测试数据已成功生成到demo/testcases目录';
         scriptDisplaySection.style.display = 'block';
         
         // 显示执行按钮
@@ -297,35 +307,48 @@ generateBtn.addEventListener('click', async () => {
     }
 });
 
-// 根据业务规则生成测试要点按钮点击事件处理
-generateFromRulesBtn.addEventListener('click', async () => {
-    const businessRules = businessRulesInput.value.trim();
-    
-    if (!businessRules) {
-        showError('请输入业务规则文档内容');
-        businessRulesInput.focus();
-        return;
-    }
-    
-    try {
-        // 生成测试要点（加载状态在函数内部处理）
-        const testCases = await generateTestPointsFromRules(businessRules);
+// 检查并添加事件监听器
+if (generateFromRulesBtn) {
+    console.log('Adding event listener to generateFromRulesBtn');
+    generateFromRulesBtn.addEventListener('click', async () => {
+        console.log('Generate button clicked');
+        // 检查业务规则输入是否为空
+        const businessRules = businessRulesInput?.value.trim();
         
-        // 显示生成的测试要点
-        testCasesContent.textContent = testCases;
-        generatedTestCases.style.display = 'block';
+        if (!businessRules) {
+            showError('请输入业务规则文档内容');
+            businessRulesInput?.focus();
+            return;
+        }
         
-        // 显示使用按钮
-        useTestCasesBtn.style.display = 'inline-block';
-        
-        // 滚动到文本案例显示区域
-        generatedTestCases.scrollIntoView({ behavior: 'smooth' });
-    } catch (error) {
-        console.error('生成测试要点时出错:', error);
-        showError(error.message || '生成测试要点时出错，请重试');
-    }
-    // 注意：加载状态在generateTestCasesFromRules函数内部处理，无需在此处处理
-});
+        try {
+            console.log('Generating test points from rules...');
+            // 生成测试要点（加载状态在函数内部处理）
+            const testCases = await generateTestPointsFromRules(businessRules);
+            
+            // 显示生成的测试要点
+            if (testCasesContent) {
+                testCasesContent.textContent = testCases;
+            }
+            
+            if (generatedTestCases) {
+                generatedTestCases.style.display = 'block';
+                generatedTestCases.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // 显示使用按钮
+            if (useTestCasesBtn) {
+                useTestCasesBtn.style.display = 'inline-block';
+            }
+        } catch (error) {
+            console.error('生成测试要点时出错:', error);
+            showError(error.message || '生成测试要点时出错，请重试');
+        }
+        // 注意：加载状态在generateTestPointsFromRules函数内部处理，无需在此处处理
+    });
+} else {
+    console.error('generateFromRulesBtn not found in the DOM');
+}
 
 // 使用生成的测试要点按钮点击事件处理
 useTestCasesBtn.addEventListener('click', () => {
@@ -416,19 +439,94 @@ executeBtn.addEventListener('click', async () => {
     }
 });
 
-// 查看Allure报告按钮点击事件
-viewReportBtn.addEventListener('click', () => {
-    const timestamp = viewReportBtn.dataset.timestamp || Date.now();
-    const reportUrl = `/allure-report/index.html?t=${timestamp}`;
+// 获取最新测试报告
+async function fetchLatestReport() {
+    try {
+        const response = await fetch('http://localhost:8003/api/v1/reports/latest');
+        const data = await response.json();
+        
+        if (data.success && data.latest_report) {
+            return data.latest_report;
+        } else {
+            console.error('获取最新报告失败:', data.error || '未知错误');
+            return null;
+        }
+    } catch (error) {
+        console.error('获取最新报告时发生错误:', error);
+        return null;
+    }
+}
+
+// 获取所有测试报告列表
+async function fetchReportsList() {
+    try {
+        const response = await fetch('http://localhost:8003/api/v1/reports');
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.reports;
+        } else {
+            console.error('获取报告列表失败:', data.error || '未知错误');
+            return [];
+        }
+    } catch (error) {
+        console.error('获取报告列表时发生错误:', error);
+        return [];
+    }
+}
+
+// 加载报告到iframe
+function loadReport(reportUrl) {
+    if (reportUrl) {
+        // 构建完整的报告URL
+        const fullUrl = reportUrl.startsWith('http') ? reportUrl : `http://localhost:8003${reportUrl}`;
+        testReportFrame.src = fullUrl;
+        reportContainer.style.display = 'block';
+        reportContainer.scrollIntoView({ behavior: 'smooth' });
+        return true;
+    }
+    return false;
+}
+
+// 查看测试报告按钮点击事件
+viewReportBtn.addEventListener('click', async () => {
+    // 显示加载状态
+    viewReportBtn.disabled = true;
+    viewReportBtn.textContent = '加载中...';
     
-    // 设置iframe的src属性
-    allureReportFrame.src = reportUrl;
-    
-    // 显示报告容器
-    reportContainer.style.display = 'block';
-    
-    // 滚动到报告区域
-    reportContainer.scrollIntoView({ behavior: 'smooth' });
+    try {
+        // 从dataset中获取报告路径
+        let reportPath = viewReportBtn.dataset.reportPath;
+        
+        if (reportPath) {
+            // 处理之前的路径格式
+            if (!reportPath.startsWith('http') && !reportPath.startsWith('/')) {
+                reportPath = `/${reportPath}`;
+            }
+            loadReport(reportPath);
+        } else {
+            // 如果没有提供报告路径，尝试加载最新的报告
+            console.log('正在获取最新的测试报告...');
+            const latestReport = await fetchLatestReport();
+            
+            if (latestReport) {
+                loadReport(latestReport.report_url);
+            } else {
+                // 尝试加载Allure报告作为备选
+                testReportFrame.src = '/allure-report/index.html';
+                reportContainer.style.display = 'block';
+                reportContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    } catch (error) {
+        console.error('加载报告时出错:', error);
+        // 显示错误信息
+        alert('加载报告失败: ' + error.message);
+    } finally {
+        // 恢复按钮状态
+        viewReportBtn.disabled = false;
+        viewReportBtn.textContent = '查看测试报告';
+    }
 });
 
 // AI分析按钮点击事件处理
@@ -525,8 +623,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 根据业务规则生成文本案例的函数
 async function generateTestPointsFromRules(businessRules) { // 函数名保持不变以避免引用错误
+    console.log('generateTestPointsFromRules called with:', businessRules);
     if (!businessRules) {
         alert('请输入业务规则文档内容');
+        return;
+    }
+    
+    // 确保UI元素存在
+    if (!generateFromRulesBtn || !testCasesContent) {
+        console.error('UI elements not found');
+        alert('界面元素未找到，请刷新页面重试');
         return;
     }
     
@@ -536,6 +642,7 @@ async function generateTestPointsFromRules(businessRules) { // 函数名保持�
     generateFromRulesBtn.classList.add('loading');
     
     try {
+        console.log('Fetching from:', `${ApiConfig.BACKEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.CONVERT_TEST_CASE}`);
         const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.CONVERT_TEST_CASE}`, {
             method: 'POST',
             headers: {
@@ -547,11 +654,13 @@ async function generateTestPointsFromRules(businessRules) { // 函数名保持�
             })
         });
         
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.status === 'success') {
             // 显示生成的测试要点

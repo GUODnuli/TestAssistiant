@@ -1,4 +1,3 @@
-```python
 """
 用户登录功能自动化测试脚本
 使用Page Object模式组织，支持数据驱动测试
@@ -351,62 +350,3 @@ if __name__ == "__main__":
         "--alluredir=./allure-results",
         "--capture=no"
     ])
-```
-
-## 环境配置说明
-
-### 1. 创建环境变量文件 (.env)
-```bash
-# .env 文件内容
-BASE_URL=https://api.yourservice.com
-TEST_USERNAME=your_test_username
-TEST_PASSWORD=your_test_password
-```
-
-### 2. 创建测试数据文件 (test_data/login_test_cases.json)
-```json
-[
-    {
-        "username": "valid_user",
-        "password": "valid_password",
-        "expected_nickname": "测试用户",
-        "expected_avatar_url": "https://example.com/avatar.jpg",
-        "should_succeed": true
-    },
-    {
-        "username": "invalid_user",
-        "password": "wrong_password",
-        "expected_nickname": "",
-        "expected_avatar_url": "",
-        "should_succeed": false
-    }
-]
-```
-
-### 3. 安装依赖包
-```bash
-pip install pytest requests allure-pytest python-dotenv
-```
-
-### 4. 运行测试
-```bash
-# 基本运行
-pytest test_user_login.py -v
-
-# 生成allure报告
-pytest test_user_login.py --alluredir=./allure-results
-allure serve ./allure-results
-```
-
-## 脚本特点
-
-1. **清晰的代码结构**: 使用Page Object模式，分离页面操作和测试逻辑
-2. **完善的异常处理**: 处理网络异常、HTTP状态码异常和JSON解析异常
-3. **详细的日志记录**: 使用logging模块记录关键操作和错误信息
-4. **环境变量管理**: 使用python-dotenv管理敏感信息
-5. **数据驱动测试**: 支持从JSON文件读取测试数据
-6. **完整的allure集成**: 添加测试步骤、附件和描述信息
-7. **类型注解**: 提高代码可读性和IDE支持
-8. **灵活的配置**: 支持多种运行方式和配置选项
-
-这个脚本提供了完整的用户登录功能测试解决方案，可以直接运行并根据实际API进行调整。

@@ -1,0 +1,19 @@
+config:
+  name: 贷款利率计算测试 - 12个月-month_inter_pay-8.64%-不使用优惠券
+  variables:
+    base_url: "http://192.168.43.138:5000"
+  verify: false
+teststeps:
+  - name: TC_001 - 12个月期限，按月付息到期还本，不使用优惠券，期望利率8.64%
+    request:
+      method: POST
+      url: $base_url/calculate_rate
+      headers:
+        Content-Type: application/json
+      json:
+        term: "12"
+        repayment_method: "month_inter_pay"
+        use_coupon: 0
+    validate:
+      - eq: ["status_code", 200]
+      - eq: ["body.rate", 8.64]
