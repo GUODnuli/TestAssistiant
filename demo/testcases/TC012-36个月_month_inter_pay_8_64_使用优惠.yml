@@ -1,10 +1,10 @@
 config:
-  name: 贷款利率计算测试 - 36个月-month_inter_pay-使用优惠券触发兜底
+  name: 贷款利率计算测试 - 36个月-month_inter_pay-8.64%-使用优惠券-2.0%兜底
   variables:
-    base_url: "http://192.168.43.138:5000"
+    base_url: "http://127.0.0.1:5000"
   verify: false
 teststeps:
-  - name: TC_001 - 36个月期限，按月付息到期还本，使用2折优惠券，期望利率2.0%
+  - name: TC_001 - 36个月按月付息按计划还本使用2折优惠券触发兜底利率2.0%
     request:
       method: POST
       url: $base_url/calculate_rate

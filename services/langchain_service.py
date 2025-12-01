@@ -1,9 +1,9 @@
 import os
 import json
 from typing import Dict, Any, Optional
-from langchain_community.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.schema import StrOutputParser
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from config import Config
 
 class LangChainService:
@@ -87,6 +87,7 @@ class LangChainService:
         """创建AI分析提示词模板"""
         config = self.prompt_configs.get('ai_analysis', {})
         template = config.get('template', '')
+        # 更新变量名从test_case到html_report_content
         return PromptTemplate.from_template(template)
 
     def parse_test_case(self, context: str, input_text: str, prompt_template: str = None) -> str:
@@ -127,7 +128,7 @@ class LangChainService:
         response = self.llm.invoke(formatted_prompt)
         return response.content
 
-    def analyze_test_results(self, test_case: str, execution_result, prompt_template: str = None) -> str:
+    def analyze_test_results(self, test_report: str, execution_result, prompt_template: str = None) -> str:
         """分析测试结果"""
         if prompt_template:
             # 使用自定义提示词模板
@@ -137,7 +138,7 @@ class LangChainService:
             prompt = self.create_ai_analysis_prompt()
         # 简化的chain创建方式
         inputs = {
-            "test_case": test_case,
+            "html_report_content": test_report,
             "success": execution_result.success,
             "output": execution_result.output,
             "error": execution_result.error or ""

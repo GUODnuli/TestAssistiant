@@ -11,6 +11,7 @@ logging.basicConfig(
 
 # 初始化logger
 logger = logging.getLogger(__name__)
+# 修复导入问题，确保使用正确的导入路径
 from services.langchain_service import LangChainService
 import os
 

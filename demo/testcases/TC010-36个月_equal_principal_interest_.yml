@@ -1,10 +1,10 @@
 config:
-  name: 贷款利率计算测试 - 36个月等额本息使用优惠券触发兜底
+  name: 贷款利率计算测试 - 36个月-等额本息-使用2折优惠券触发兜底利率
   variables:
-    base_url: "http://192.168.43.138:5000"
+    base_url: "http://127.0.0.1:5000"
   verify: false
 teststeps:
-  - name: TC_001 - 36个月-equal_principal_interest-8.64%-使用优惠券-2.0%（触发兜底）
+  - name: TC_001 - 36个月-等额本息-使用2折优惠券触发兜底利率2.0%
     request:
       method: POST
       url: $base_url/calculate_rate

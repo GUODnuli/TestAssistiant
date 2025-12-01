@@ -24,6 +24,7 @@ const aiAnalysisBtn = document.getElementById('ai-analysis-btn');
 const aiAnalysisSection = document.getElementById('ai-analysis-section');
 const aiAnalysisContent = document.getElementById('ai-analysis-content');
 const viewReportBtn = document.getElementById('view-report-btn');
+const viewHrpReportBtn = document.getElementById('view-hrp-report-btn'); // 新增HRP报告按钮
 const reportContainer = document.getElementById('report-container');
 const testReportFrame = document.getElementById('allure-report-frame');
 
@@ -101,30 +102,6 @@ async function executeTestScript(script) {
             console.log('存储报告路径:', data.report_path);
         }
         
-        // 获取report.html文件内容
-        let reportHtmlContent = null;
-        if (data.report_path) {
-            try {
-                // 构建报告文件的URL路径
-                // 假设报告文件存储在后端，可以通过API获取
-                const reportResponse = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}/get-report?path=${encodeURIComponent(data.report_path)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'text/html'
-                    }
-                });
-                
-                if (reportResponse.ok) {
-                    reportHtmlContent = await reportResponse.text();
-                    console.log('成功获取报告HTML内容');
-                } else {
-                    console.warn('无法获取报告HTML内容，状态码:', reportResponse.status);
-                }
-            } catch (reportError) {
-                console.error('获取报告HTML内容时出错:', reportError);
-            }
-        }
-        
         // 构造响应报文
         const responsePayload = {
             status: data.success ? "success" : "failure",
@@ -132,8 +109,7 @@ async function executeTestScript(script) {
                 success: data.success,
                 output: data.output,
                 error: data.error,
-                report_path: data.report_path,
-                report_html: reportHtmlContent // 添加报告HTML内容到响应中
+                report_path: data.report_path // 添加报告路径到响应中
             },
             timestamp: new Date().toISOString()
         };
@@ -141,8 +117,7 @@ async function executeTestScript(script) {
         return {
             result: data.output,
             response: JSON.stringify(responsePayload, null, 2),
-            reportPath: data.report_path,
-            reportHtml: reportHtmlContent // 返回报告HTML内容
+            reportPath: data.report_path
         };
     } catch (error) {
         console.error('执行脚本时出错:', error);
@@ -173,9 +148,20 @@ async function analyzeTestResults(testCase, responsePayload) {
         // 解析响应数据
         const data = typeof responsePayload === 'string' ? JSON.parse(responsePayload) : responsePayload;
         
+        // 获取最新的测试报告路径
+        let testReportPath = '';
+        try {
+            const latestReport = await fetchLatestReport();
+            if (latestReport && latestReport.report_path) {
+                testReportPath = latestReport.report_path;
+            }
+        } catch (reportError) {
+            console.warn('获取测试报告路径失败:', reportError);
+        }
+        
         // 准备发送到后端的数据
         const requestData = {
-            test_case: testCase,
+            test_report_path: testReportPath, // 发送报告路径而不是报告内容
             execution_result: {
                 success: data.data?.success,
                 output: data.data?.output || '',
@@ -414,38 +400,6 @@ executeBtn.addEventListener('click', async () => {
         executionLog.textContent = data.result;
         executionOutput.style.display = 'block';
         
-        // 如果有报告HTML内容，嵌入到execution-output div中
-        if (data.reportHtml) {
-            // 创建一个新的div来容纳报告内容
-            const reportDiv = document.createElement('div');
-            reportDiv.className = 'embedded-report';
-            reportDiv.innerHTML = data.reportHtml;
-            
-            // 确保移除可能导致问题的脚本
-            const scripts = reportDiv.querySelectorAll('script');
-            scripts.forEach(script => script.remove());
-            
-            // 找到execution-log元素后的位置插入报告
-            const executionLogElement = executionOutput.querySelector('#execution-log');
-            if (executionLogElement) {
-                // 检查是否已有报告div，如果有则移除
-                const existingReport = executionOutput.querySelector('.embedded-report');
-                if (existingReport) {
-                    executionOutput.removeChild(existingReport);
-                }
-                
-                // 插入新的报告div
-                executionOutput.appendChild(reportDiv);
-                console.log('测试报告已成功嵌入到执行结果区域');
-            }
-        } else {
-            // 如果没有报告HTML内容，确保移除可能存在的报告div
-            const existingReport = executionOutput.querySelector('.embedded-report');
-            if (existingReport) {
-                executionOutput.removeChild(existingReport);
-            }
-        }
-        
         // 显示应答报文
         responseContent.textContent = data.response;
         responseSection.style.display = 'block';
@@ -473,6 +427,7 @@ executeBtn.addEventListener('click', async () => {
         
         // 显示查看报告按钮
         viewReportBtn.style.display = 'inline-block';
+        viewHrpReportBtn.style.display = 'inline-block'; // 显示HRP报告按钮
         viewReportBtn.dataset.timestamp = Date.now();
     } catch (error) {
         console.error('执行脚本时出错:', error);
@@ -497,6 +452,58 @@ executeBtn.addEventListener('click', async () => {
     }
 });
 
+// 获取最新测试报告
+async function fetchLatestReport() {
+    try {
+        const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}/api/v1/reports/latest`);
+        const data = await response.json();
+        
+        if (data.success && data.latest_report) {
+            return data.latest_report;
+        } else {
+            console.error('获取最新报告失败:', data.error || '未知错误');
+            return null;
+        }
+    } catch (error) {
+        console.error('获取最新报告时发生错误:', error);
+        return null;
+    }
+}
+
+// 获取所有测试报告列表
+async function fetchReportsList() {
+    try {
+        const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}/api/v1/reports`);
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.reports;
+        } else {
+            console.error('获取报告列表失败:', data.error || '未知错误');
+            return [];
+        }
+    } catch (error) {
+        console.error('获取报告列表时发生错误:', error);
+        return [];
+    }
+}
+
+// 加载报告到iframe
+function loadReport(reportUrl) {
+    if (reportUrl) {
+        // 构建完整的报告URL
+        const timestamp = Date.now(); // 添加时间戳防止缓存
+        const fullUrl = reportUrl.startsWith('http') ? 
+            `${reportUrl}?t=${timestamp}` : 
+            `${ApiConfig.BACKEND_SERVICE_URL}${reportUrl}?t=${timestamp}`;
+        testReportFrame.src = fullUrl;
+        reportContainer.style.display = 'block';
+        reportContainer.scrollIntoView({ behavior: 'smooth' });
+        return true;
+    }
+    return false;
+}
+
 // 查看测试报告按钮点击事件
 viewReportBtn.addEventListener('click', async () => {
     // 显示加载状态
@@ -504,36 +511,29 @@ viewReportBtn.addEventListener('click', async () => {
     viewReportBtn.textContent = '加载中...';
     
     try {
-        // 检查是否有存储的报告路径
-        if (viewReportBtn.dataset.reportPath) {
-            // 从存储的路径中构造完整URL
-            const reportPath = viewReportBtn.dataset.reportPath;
-            console.log('使用存储的报告路径:', reportPath);
-            
-            // 设置iframe的src属性，添加时间戳以防止缓存
-            const timestamp = Date.now();
-            const reportUrl = `${ApiConfig.BACKEND_SERVICE_URL}/${reportPath}?t=${timestamp}`;
-            
-            console.log('请求报告URL:', reportUrl);
-            
-            // 设置iframe的src属性
-            testReportFrame.src = reportUrl;
+        // 从dataset中获取报告路径
+        let reportPath = viewReportBtn.dataset.reportPath;
+        
+        if (reportPath) {
+            // 处理之前的路径格式
+            if (!reportPath.startsWith('http') && !reportPath.startsWith('/')) {
+                reportPath = `/${reportPath}`;
+            }
+            loadReport(reportPath);
         } else {
-            // 如果没有存储的报告路径，显示提示信息
-            console.warn('没有找到可用的报告路径，尝试加载最新报告...');
+            // 如果没有提供报告路径，尝试加载最新的报告
+            console.log('正在获取最新的测试报告...');
+            const latestReport = await fetchLatestReport();
             
-            // 尝试获取最新报告（这里可以添加一个API调用来获取最新报告路径）
-            // 为了演示，我们使用默认路径
-            const timestamp = Date.now();
-            const reportUrl = `/results/${timestamp}/report.html`;
-            testReportFrame.src = reportUrl;
+            if (latestReport) {
+                loadReport(latestReport.report_url);
+            } else {
+                // 尝试加载Allure报告作为备选
+                testReportFrame.src = '/allure-report/index.html';
+                reportContainer.style.display = 'block';
+                reportContainer.scrollIntoView({ behavior: 'smooth' });
+            }
         }
-        
-        // 显示报告容器
-        reportContainer.style.display = 'block';
-        
-        // 滚动到报告区域
-        reportContainer.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
         console.error('加载报告时出错:', error);
         // 显示错误信息
@@ -542,6 +542,26 @@ viewReportBtn.addEventListener('click', async () => {
         // 恢复按钮状态
         viewReportBtn.disabled = false;
         viewReportBtn.textContent = '查看测试报告';
+    }
+});
+
+// 查看HRP执行报告按钮点击事件
+viewHrpReportBtn.addEventListener('click', async () => {
+    try {
+        // 直接调用后端API获取最新的报告信息
+        const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}/api/v1/reports/latest`);
+        const data = await response.json();
+        
+        if (data.success && data.latest_report && data.latest_report.report_path) {
+            // 构建完整的报告URL并在新标签页中打开
+            const reportUrl = `${ApiConfig.BACKEND_SERVICE_URL}/${data.latest_report.report_path}`;
+            window.open(reportUrl, '_blank');
+        } else {
+            alert('未找到HRP执行报告，请确认已执行测试并生成了报告');
+        }
+    } catch (error) {
+        console.error('打开HRP报告时出错:', error);
+        alert('打开HRP报告失败: ' + error.message);
     }
 });
 
@@ -737,11 +757,21 @@ async function handleBusinessRulesFileUpload(event) {
                 } catch (error) {
                     console.error('mammoth.js解析DOCX文件失败:', error);
                     // 降级处理
-                    businessRulesInput.value = `【DOCX文件上传】\n文件名: ${file.name}\n文件大小: ${formatFileSize(file.size)}\n文件类型: ${file.type || fileExtension}\n\n文件解析时出现错误，将通过后端服务处理提取测试用例。`;
+                    businessRulesInput.value = `【DOCX文件上传】
+文件名: ${file.name}
+文件大小: ${formatFileSize(file.size)}
+文件类型: ${file.type || fileExtension}
+
+文件解析时出现错误，将通过后端服务处理提取测试用例。`;
                 }
             } else {
                 // mammoth.js 未加载，降级为后端处理
-                businessRulesInput.value = `【DOCX文件上传】\n文件名: ${file.name}\n文件大小: ${formatFileSize(file.size)}\n文件类型: ${file.type || fileExtension}\n\n由于浏览器环境限制，将通过后端服务处理提取测试用例。`;
+                businessRulesInput.value = `【DOCX文件上传】
+文件名: ${file.name}
+文件大小: ${formatFileSize(file.size)}
+文件类型: ${file.type || fileExtension}
+
+由于浏览器环境限制，将通过后端服务处理提取测试用例。`;
             }
         }
         // 对于 Excel 文件，需要后端处理
@@ -749,12 +779,22 @@ async function handleBusinessRulesFileUpload(event) {
                  file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
                  fileExtension === '.xls' || fileExtension === '.xlsx') {
             // 对于Excel文件，显示提示信息，实际处理将在后端进行
-            businessRulesInput.value = `【Excel文件上传】\n文件名: ${file.name}\n文件大小: ${formatFileSize(file.size)}\n文件类型: ${file.type || fileExtension}\n\nExcel文件将通过后端服务处理提取测试用例。`;
+            businessRulesInput.value = `【Excel文件上传】
+文件名: ${file.name}
+文件大小: ${formatFileSize(file.size)}
+文件类型: ${file.type || fileExtension}
+
+Excel文件将通过后端服务处理提取测试用例。`;
         }
         // 对于 DOC 文件，需要后端处理或提示用户转换为 DOCX/TXT 格式
         else if (file.type === 'application/msword' || fileExtension === '.doc') {
             alert('DOC 格式需要特殊处理，请将文件转换为 DOCX 或 TXT 格式以获得更好的支持。');
-            businessRulesInput.value = `【文件上传】\n文件名: ${file.name}\n文件大小: ${formatFileSize(file.size)}\n文件类型: ${file.type || fileExtension}\n\n请将文件内容复制粘贴到此处或转换为 DOCX/TXT 格式。`;
+            businessRulesInput.value = `【文件上传】
+文件名: ${file.name}
+文件大小: ${formatFileSize(file.size)}
+文件类型: ${file.type || fileExtension}
+
+请将文件内容复制粘贴到此处或转换为 DOCX/TXT 格式。`;
         }
     } catch (error) {
         console.error('文件读取出错:', error);

@@ -3,11 +3,8 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-// 导入API配置，使用相对路径
-const ApiConfig = require('./api-config').ApiConfig;
-
 const app = express();
-const PORT = ApiConfig.PORT.FRONTEND_PORT;
+const PORT = 8080; // 默认端口
 
 // 启用CORS
 app.use(cors());
@@ -16,7 +13,12 @@ app.use(cors());
 app.use(express.json());
 
 // 提供静态文件
-app.use(express.static('.'));
+app.use(express.static('./static'));
+
+// 提供根目录下的api-config.js文件
+app.get('/api-config.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'api-config.js'));
+});
 
 // 获取提示词数据的API端点
 app.get('/api/prompts', (req, res) => {
@@ -67,9 +69,9 @@ app.get('/api/prompts', (req, res) => {
 
 // 处理所有其他路由，返回index.html
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${ApiConfig.FRONTEND_SERVICE_URL}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

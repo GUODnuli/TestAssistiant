@@ -11,16 +11,21 @@ function getEnvVar(name, defaultValue) {
     return defaultValue;
 }
 
+// 从.env文件加载环境变量（Node.js环境）
+if (typeof require !== 'undefined' && typeof process !== 'undefined') {
+    require('dotenv').config();
+}
+
 // 端口号配置
 const PORT_CONFIG = {
     // 前端服务端口
     FRONTEND_PORT: parseInt(getEnvVar('FRONTEND_PORT', '8080')),
     
     // 后端服务端口
-    BACKEND_PORT: parseInt(getEnvVar('BACKEND_PORT', '8003')),
+    BACKEND_PORT: parseInt(getEnvVar('BACKEND_PORT', '8000')),
     
     // Allure报告服务端口
-    ALLURE_PORT: parseInt(getEnvVar('ALLURE_PORT', '8080'))
+    ALLURE_PORT: parseInt(getEnvVar('ALLURE_PORT', '5000'))
 };
 
 // 基础URL配置

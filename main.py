@@ -41,6 +41,8 @@ app.mount("/allure-results", StaticFiles(directory="allure-results"), name="allu
 app.mount("/allure-report", StaticFiles(directory="allure-report"), name="allure-report")
 # 挂载静态文件目录以提供前端页面访问
 app.mount("/static", StaticFiles(directory=".", html=True), name="static")
+# 挂载results目录以提供hrp测试报告访问
+app.mount("/results", StaticFiles(directory="results"), name="results")
 
 # 初始化服务
 test_case_service = TestCaseConversionService()
@@ -132,7 +134,7 @@ class TestExecutionResponse(BaseModel):
     report_path: Optional[str] = None
 
 class AIAnalysisRequest(BaseModel):
-    test_case: str
+    test_report_path: str
     execution_result: TestExecutionResponse
 
 class AIAnalysisResponse(BaseModel):
@@ -176,7 +178,7 @@ async def execute_test_script(request: TestExecutionRequest):
     os.makedirs(reports_dir, exist_ok=True)
     
     # 测试数据目录
-    testcases_dir = "/Users/Zhuanz/001-TRAE/AI-langchain-1030/demo/testcases"
+    testcases_dir = "demo/testcases"
     
     try:
         # 遍历目录下所有.yml文件
@@ -189,69 +191,15 @@ async def execute_test_script(request: TestExecutionRequest):
             raise HTTPException(status_code=404, detail="在demo/testcases/目录下未找到.yml文件")
         
         # 使用指定路径的hrp工具执行测试并生成HTML报告
-        hrp_path = "/Users/Zhuanz/001-TRAE/AI-langchain-1030/hrp-v4.3.5-darwin-amd64/hrp"
+        hrp_path = "C:\\Users\\62411\\Project\\LLMProjects\\TestAssistiant\\hrp-v4.3.5-windows-amd64\\hrp.exe"
         
         # 构建命令，将所有yml文件作为参数
         cmd = [hrp_path, 'run'] + yml_files + ['--gen-html-report']
         
         logger.info(f"执行命令: {' '.join(cmd)}")
         
-        # 执行命令，实时打印输出到终端
-        stdout_lines = []
-        stderr_lines = []
-        
-        try:
-            # 使用Popen实时读取输出
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1  # 行缓冲
-            )
-            
-            # 实时读取并打印stdout
-            while True:
-                line = process.stdout.readline()
-                if not line and process.poll() is not None:
-                    break
-                if line:
-                    print(line.strip())
-                    stdout_lines.append(line)
-            
-            # 读取并打印stderr
-            while True:
-                line = process.stderr.readline()
-                if not line and process.poll() is not None:
-                    break
-                if line:
-                    print(line.strip(), file=sys.stderr)
-                    stderr_lines.append(line)
-            
-            # 等待进程完成
-            process.wait(timeout=300)  # 增加超时时间到5分钟
-            
-            # 组合输出结果
-            stdout = ''.join(stdout_lines)
-            stderr = ''.join(stderr_lines)
-            
-            # 创建结果对象，模拟subprocess.run的返回值
-            class Result:
-                def __init__(self, returncode, stdout, stderr):
-                    self.returncode = returncode
-                    self.stdout = stdout
-                    self.stderr = stderr
-            
-            result = Result(process.returncode, stdout, stderr)
-            
-        except subprocess.TimeoutExpired:
-            process.kill()
-            stdout, stderr = process.communicate(timeout=10)
-            raise TimeoutError(f"执行命令超时: {' '.join(cmd)}")
-        except Exception as e:
-            if 'process' in locals():
-                process.kill()
-            raise e
+        # 执行命令，指定编码为utf-8以避免中文乱码问题
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, encoding='utf-8')
         
         # 查找生成的HTML报告路径
         report_path = None
@@ -284,9 +232,15 @@ async def execute_test_script(request: TestExecutionRequest):
 async def analyze_test_results(request: AIAnalysisRequest):
     """分析测试结果"""
     try:
+        # 读取测试报告内容
+        test_report_content = ""
+        if request.test_report_path and os.path.exists(request.test_report_path):
+            with open(request.test_report_path, 'r', encoding='utf-8') as f:
+                test_report_content = f.read()
+        
         # 调用LangChain服务进行分析
         analysis = langchain_service.analyze_test_results(
-            test_case=request.test_case,
+            test_report=test_report_content,
             execution_result=request.execution_result
         )
         
