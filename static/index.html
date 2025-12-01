@@ -52,7 +52,7 @@
     <div class="container">
         <header>
             <h1>AI TestGen Pro</h1>
-            <p>智能测试用例生成与转换平台</p>
+            <p>智能测试用例生成与执行平台</p>
             <div class="header-links">
                 <a href="tool-intro.html" class="header-link" target="_blank">工具介绍</a>
                 <a href="prompt-engineering.html" class="header-link" target="_blank">提示词工程展示</a>
@@ -170,6 +170,8 @@
     
     <!-- 使用备用CDN源加载mammoth.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js" onerror="console.warn('mammoth.js加载失败，将使用后端处理DOCX文件')"></script>
+    <!-- 加载Marked.js用于Markdown解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="../api-config.js"></script>
     <script src="script.js"></script>
 </body>

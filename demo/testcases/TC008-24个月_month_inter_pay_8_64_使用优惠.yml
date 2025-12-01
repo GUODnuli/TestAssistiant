@@ -4,7 +4,7 @@ config:
     base_url: "http://127.0.0.1:5000"
   verify: false
 teststeps:
-  - name: TC_001 - 24个月按月付息按计划还本使用2折优惠券触发兜底利率2.0%
+  - name: TC_001 - 24个月-按月付息按计划还本-使用2折优惠券触发兜底利率2.0%
     request:
       method: POST
       url: $base_url/calculate_rate

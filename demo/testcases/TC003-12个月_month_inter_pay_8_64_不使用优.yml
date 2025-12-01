@@ -1,5 +1,5 @@
 config:
-  name: 贷款利率计算测试 - 12个月-month_inter_pay-8.64%-不使用优惠券
+  name: 贷款利率计算测试 - 12个月-month_inter_pay-不使用优惠券
   variables:
     base_url: "http://127.0.0.1:5000"
   verify: false

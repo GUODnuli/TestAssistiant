@@ -448,16 +448,32 @@ code {
     color: #000;
     font-size: 1rem;
     line-height: 1.6;
-    white-space: pre-wrap;
     word-break: break-word;
 }
 
-.ai-analysis-content h4 {
+.ai-analysis-content h2 {
     color: #3498db;
-    margin: 15px 0 10px 0;
+    margin: 20px 0 15px 0;
+    font-size: 1.5rem;
 }
 
-.ai-analysis-content ul {
+.ai-analysis-content h3 {
+    color: #2c3e50;
+    margin: 15px 0 10px 0;
+    font-size: 1.3rem;
+}
+
+.ai-analysis-content h4 {
+    color: #2c3e50;
+    margin: 12px 0 8px 0;
+    font-size: 1.1rem;
+}
+
+.ai-analysis-content p {
+    margin: 10px 0;
+}
+
+.ai-analysis-content ul, .ai-analysis-content ol {
     padding-left: 20px;
     margin: 10px 0;
 }
@@ -466,11 +482,27 @@ code {
     margin-bottom: 8px;
 }
 
-.ai-analysis-content .highlight {
-    background-color: #fff3cd;
+.ai-analysis-content strong {
+    font-weight: bold;
+}
+
+.ai-analysis-content em {
+    font-style: italic;
+}
+
+.ai-analysis-content code {
+    background-color: #e9ecef;
     padding: 2px 4px;
     border-radius: 3px;
-    font-weight: 500;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.ai-analysis-content blockquote {
+    border-left: 4px solid #3498db;
+    padding: 10px 20px;
+    margin: 15px 0;
+    background-color: #e3f2fd;
 }
 
 /* 加载动画 */

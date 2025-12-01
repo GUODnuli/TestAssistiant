@@ -196,17 +196,22 @@ async function analyzeTestResults(testCase, responsePayload) {
         
         if (result.success) {
             // 显示AI分析结果
-            // 将Markdown格式转换为HTML格式显示
-            let formattedAnalysis = result.analysis
-                .replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>')
-                .replace(/### (.*?)(\n|$)/g, '<h3>$1</h3>')
-                .replace(/\n\n/g, '<br><br>')
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/- (.*?)(<br>|$)/g, '<li>$1</li>')
-                .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
-            
-            aiAnalysisContent.innerHTML = formattedAnalysis;
+            // 使用Marked.js解析Markdown格式
+            if (typeof marked !== 'undefined') {
+                // 使用Marked.js解析Markdown
+                aiAnalysisContent.innerHTML = marked.parse(result.analysis);
+            } else {
+                // 降级处理：使用简单的HTML替换
+                let formattedAnalysis = result.analysis
+                    .replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>')
+                    .replace(/### (.*?)(\n|$)/g, '<h3>$1</h3>')
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/- (.*?)(<br>|$)/g, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+                aiAnalysisContent.innerHTML = formattedAnalysis;
+            }
             aiAnalysisSection.style.display = 'block';
         } else {
             throw new Error(result.error || 'AI分析失败');

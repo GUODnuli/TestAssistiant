@@ -1,10 +1,10 @@
 config:
-  name: 贷款利率计算测试 - 24个月-等额本息-使用2折优惠券触发兜底利率
+  name: 贷款利率计算测试 - 24个月-等额本息-使用优惠券触发兜底
   variables:
     base_url: "http://127.0.0.1:5000"
   verify: false
 teststeps:
-  - name: TC_001 - 24个月-等额本息-使用2折优惠券触发兜底利率2.0%
+  - name: TC_001 - 24个月-等额本息-使用优惠券触发兜底
     request:
       method: POST
       url: $base_url/calculate_rate
