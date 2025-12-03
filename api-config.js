@@ -58,6 +58,7 @@ const ApiConfig = {
         CONVERT_TEST_CASE: '/api/v1/convert-test-case',
         EXECUTE_TEST: '/api/v1/execute-test',
         ANALYZE_RESULTS: '/api/v1/analyze-results',
+        ANALYZE_RESULTS_STRUCTURED: '/api/v1/analyze-results-structured', // 新增结构化分析接口
         
         // Node.js前端API
         PROMPTS: '/api/prompts'

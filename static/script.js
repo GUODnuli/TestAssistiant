@@ -233,6 +233,99 @@ async function analyzeTestResults(testCase, responsePayload) {
     }
 }
 
+// AI结果分析函数（结构化版本）
+async function analyzeTestResultsStructured(testCase, responsePayload) {
+    try {
+        // 解析响应数据
+        const data = typeof responsePayload === 'string' ? JSON.parse(responsePayload) : responsePayload;
+        
+        // 获取最新的测试报告路径
+        let testReportPath = '';
+        try {
+            const latestReport = await fetchLatestReport();
+            if (latestReport && latestReport.report_path) {
+                testReportPath = latestReport.report_path;
+            }
+        } catch (reportError) {
+            console.warn('获取测试报告路径失败:', reportError);
+        }
+        
+        // 准备发送到后端的数据
+        const requestData = {
+            test_report_path: testReportPath, // 发送报告路径而不是报告内容
+            execution_result: {
+                success: data.data?.success,
+                output: data.data?.output || '',
+                error: data.data?.error || ''
+            }
+        };
+        
+        // 调用后端AI结构化分析API
+        const response = await fetch(`${ApiConfig.BACKEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.ANALYZE_RESULTS_STRUCTURED}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // 检查响应内容类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Received non-JSON response:', text);
+            throw new Error('服务器返回了意外的响应格式');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // 显示结构化的AI分析结果
+            // 清理内容中可能存在的重复标题
+            const cleanFirstPart = result.first_part.replace(/：测试案例分析/, '').replace(/:测试案例分析/, '').trim();
+            const cleanSecondPart = result.second_part.replace(/：测试结果分析/, '').replace(/:测试结果分析/, '').trim();
+            const cleanThirdPart = result.third_part.replace(/：指导建议/, '').replace(/:指导建议/, '').trim();
+            const cleanSummary = result.summary.replace(/：总结/, '').replace(/:总结/, '').trim();
+            
+            document.getElementById('first-part-content').innerHTML = 
+                typeof marked !== 'undefined' ? marked.parse(cleanFirstPart) : cleanFirstPart.replace(/\n/g, '<br>');
+            document.getElementById('second-part-content').innerHTML = 
+                typeof marked !== 'undefined' ? marked.parse(cleanSecondPart) : cleanSecondPart.replace(/\n/g, '<br>');
+            document.getElementById('third-part-content').innerHTML = 
+                typeof marked !== 'undefined' ? marked.parse(cleanThirdPart) : cleanThirdPart.replace(/\n/g, '<br>');
+            document.getElementById('summary-content').innerHTML = 
+                typeof marked !== 'undefined' ? marked.parse(cleanSummary) : cleanSummary.replace(/\n/g, '<br>');
+            
+            aiAnalysisSection.style.display = 'block';
+        } else {
+            throw new Error(result.error || 'AI分析失败');
+        }
+    } catch (err) {
+        console.error('AI结果分析时出错:', err);
+        // 显示简单的错误信息
+        let errorMessage = '无法分析测试结果，请查看应答报文获取详细信息。';
+        if (err.message.includes('Unexpected token')) {
+            errorMessage = '服务器返回了意外的响应格式，请稍后重试或联系管理员。';
+        } else if (err.message.includes('HTTP error')) {
+            errorMessage = `服务器错误: ${err.message}`;
+        } else if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+            errorMessage = '无法连接到后端服务器，请确保后端服务正在运行并且CORS设置正确。';
+        }
+        
+        // 在第一部分显示错误信息
+        document.getElementById('first-part-content').innerHTML = errorMessage;
+        document.getElementById('second-part-content').innerHTML = '';
+        document.getElementById('third-part-content').innerHTML = '';
+        document.getElementById('summary-content').innerHTML = '';
+        aiAnalysisSection.style.display = 'block';
+    }
+}
+
 // 显示加载状态的函数
 function showLoadingState(element, isLoading) {
     if (element && isLoading) {
@@ -585,20 +678,51 @@ aiAnalysisBtn.addEventListener('click', async () => {
     aiAnalysisBtn.textContent = '分析中...';
     
     try {
-        // AI结果分析
-        await analyzeTestResults(testCase, response);
+        // AI结果分析（结构化版本）
+        await analyzeTestResultsStructured(testCase, response);
         
         // 滚动到AI分析结果区域
         aiAnalysisSection.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
         console.error('AI分析时出错:', error);
-        aiAnalysisContent.innerHTML = 'AI分析时发生错误，请稍后重试。';
+        document.getElementById('first-part-content').innerHTML = 'AI分析时发生错误，请稍后重试。';
         aiAnalysisSection.style.display = 'block';
     } finally {
         // 恢复按钮状态
         aiAnalysisBtn.classList.remove('loading');
         aiAnalysisBtn.textContent = 'AI 结果分析';
     }
+});
+
+// 标签页切换功能
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取所有标签页按钮和内容区域
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.analysis-part');
+    
+    // 为每个标签页按钮添加点击事件监听器
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            
+            // 移除所有按钮的active类
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // 为当前点击的按钮添加active类
+            this.classList.add('active');
+            
+            // 隐藏所有内容区域
+            tabContents.forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // 显示对应的内容区域
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+            }
+        });
+    });
 });
 
 // 复制按钮点击事件处理

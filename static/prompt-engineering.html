@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>提示词工程展示 - AI TestGen Pro</title>
+    <title>通用提示词工程展示 - AI TestGen Pro</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         .tabs {
@@ -345,7 +345,7 @@
         <main>
             <a href="index.html" class="back-link">← 返回主页</a>
             
-            <h2>提示词工程展示</h2>
+            <h2>通用提示词工程展示</h2>
             
             <div id="prompt-tabs-container">
                 <div class="loading">正在加载提示词数据...</div>
@@ -356,8 +356,8 @@
     <script src="api-config.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 从后端API获取提示词数据
-            fetch(`${ApiConfig.FRONTEND_SERVICE_URL}${ApiConfig.API_ENDPOINTS.PROMPTS}`)
+            // 从后端API获取通用提示词数据
+            fetch(`${ApiConfig.FRONTEND_SERVICE_URL}/api/generic-prompts`)
                 .then(response => response.json())
                 .then(data => {
                     renderPromptTabs(data.prompts);
@@ -382,13 +382,13 @@
                 let contentHTML = '';
                 
                 prompts.forEach((prompt, index) => {
-                        // 页签按钮
-                        tabsHTML += `
-                            <button class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${prompt.id}">
-                                <span class="tab-text">${prompt.name}</span>
-                            </button>
-                        `;
-                    
+                    // 页签按钮
+                    tabsHTML += `
+                        <button class="tab-button ${index === 0 ? 'active' : ''}" data-tab="${prompt.id}">
+                            <span class="tab-text">${prompt.name}</span>
+                        </button>
+                    `;
+                
                     // 页签内容
                     contentHTML += `
                         <div id="tab-${prompt.id}" class="tab-content ${index === 0 ? 'active' : ''}">

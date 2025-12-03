@@ -57,76 +57,82 @@ class TestCaseConversionService:
                            parser_prompt_template: str = None, generator_prompt_template: str = None,
                            generation_type: str = "test_cases") -> Dict:
         """转换测试要点为测试用例或生成测试数据文件"""
-            
-        # 根据生成类型调用相应的函数
-        if generation_type == "test_data":
-            # 生成测试数据并保存为yml文件
-            test_points = self._split_test_points(test_case_description)
-            saved_files = []
-            serialized_cases = []
-            
-            # 确保demo/testcases目录存在
-            testcases_dir = os.path.join("demo", "testcases")
-            if not os.path.exists(testcases_dir):
-                os.makedirs(testcases_dir)
-            
-            # 逐条处理测试要点并生成yml文件
-            for i, test_point in enumerate(test_points, 1):
-                # 生成测试用例内容
-                generated_content = self.langchain_service.generate_test_script(
-                    test_case=test_point
-                )
-                logger.info(f"已生成测试数据 #{i}: {generated_content}")
+        try:
+            # 根据生成类型调用相应的函数
+            if generation_type == "test_data":
+                # 生成测试数据并保存为yml文件
+                test_points = self._split_test_points(test_case_description)
+                saved_files = []
+                serialized_cases = []
                 
-                # 创建文件名
-                file_name = f"TC{i:03d}-{self._generate_safe_filename(test_point)}.yml"
-                file_path = os.path.join(testcases_dir, file_name)
+                # 确保demo/testcases目录存在
+                testcases_dir = os.path.join("demo", "testcases")
+                if not os.path.exists(testcases_dir):
+                    os.makedirs(testcases_dir)
                 
-                # 序列化内容
-                serialized_content = self._serialize_yaml_content(generated_content, test_point)
-                
-                # 保存到文件
-                try:
-                    with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(serialized_content)
-                    saved_files.append(file_name)
+                # 逐条处理测试要点并生成yml文件
+                for i, test_point in enumerate(test_points, 1):
+                    # 生成测试用例内容
+                    generated_content = self.langchain_service.generate_test_script(
+                        test_case=test_point
+                    )
+                    logger.info(f"已生成测试数据 #{i}: {generated_content}")
                     
-                    # 将序列化后的内容添加到结果中，每个测试用例添加编号
-                    serialized_cases.append(f"测试用例{i}:\n{serialized_content}")
-                except Exception as e:
-                    print(f"保存文件 {file_name} 失败: {str(e)}")
+                    # 创建文件名
+                    file_name = f"TC{i:03d}-{self._generate_safe_filename(test_point)}.yml"
+                    file_path = os.path.join(testcases_dir, file_name)
+                    
+                    # 序列化内容
+                    serialized_content = self._serialize_yaml_content(generated_content, test_point)
+                    
+                    # 保存到文件
+                    try:
+                        with open(file_path, 'w', encoding='utf-8') as f:
+                            f.write(serialized_content)
+                        saved_files.append(file_name)
+                        
+                        # 将序列化后的内容添加到结果中，每个测试用例添加编号
+                        serialized_cases.append(f"测试用例{i}:\n{serialized_content}")
+                    except Exception as e:
+                        print(f"保存文件 {file_name} 失败: {str(e)}")
+                
+                # 组合所有序列化后的测试用例为纯文本
+                combined_cases_text = "\n\n".join(serialized_cases)
+                
+                generated_content = {
+                    "saved_files": saved_files,
+                    "total_files": len(saved_files),
+                    "directory": testcases_dir,
+                    "serialized_cases": combined_cases_text
+                }
+            else:
+                # 默认生成测试用例
+                generated_content = self.langchain_service.generate_test_cases_from_rules(
+                    requirements=test_case_description
+                )
             
-            # 组合所有序列化后的测试用例为纯文本
-            combined_cases_text = "\n\n".join(serialized_cases)
-            
-            generated_content = {
-                "saved_files": saved_files,
-                "total_files": len(saved_files),
-                "directory": testcases_dir,
-                "serialized_cases": combined_cases_text
+            # 根据生成类型返回不同的字段名
+            result = {
+                "status": "success",
+                "metadata": {
+                    "input_content": test_case_description,
+                    "generation_type": generation_type
+                }
             }
-        else:
-            # 默认生成测试用例
-            generated_content = self.langchain_service.generate_test_cases_from_rules(
-                requirements=test_case_description
-            )
-        
-        # 根据生成类型返回不同的字段名
-        result = {
-            "status": "success",
-            "metadata": {
-                "input_content": test_case_description,
-                "generation_type": generation_type
-            }
-        }
-        
-        if generation_type == "test_data":
-            # 直接返回serialized_cases作为纯文本
-            result["generated_test_data"] = combined_cases_text
-        else:
-            result["generated_test_cases"] = generated_content
             
-        return result
+            if generation_type == "test_data":
+                # 直接返回serialized_cases作为纯文本
+                result["generated_test_data"] = combined_cases_text
+            else:
+                result["generated_test_cases"] = generated_content
+                
+            return result
+        except Exception as e:
+            logger.error(f"转换测试用例时出错: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
     
     def _split_test_points(self, test_points_text: str) -> List[str]:
         """将测试要点文本分割成单个测试要点列表"""
@@ -153,20 +159,27 @@ class TestCaseConversionService:
     def convert_batch_cases(self, test_cases: List[str],
                            parser_prompt_template: str = None, generator_prompt_template: str = None) -> Dict:
         """批量转换测试用例为自动化测试脚本"""
-        results = []
-        for test_case in test_cases:
-            result = self.convert_single_case(
-                test_case_description=test_case,
-                parser_prompt_template=parser_prompt_template,
-                generator_prompt_template=generator_prompt_template,
-                generation_type="test_cases"
-            )
-            results.append({
-                "input_content": test_case,
-                "generated_test_cases": result["generated_test_cases"]
-            })
-            
-        return {
-            "status": "success",
-            "results": results
-        }
+        try:
+            results = []
+            for test_case in test_cases:
+                result = self.convert_single_case(
+                    test_case_description=test_case,
+                    parser_prompt_template=parser_prompt_template,
+                    generator_prompt_template=generator_prompt_template,
+                    generation_type="test_cases"
+                )
+                results.append({
+                    "input_content": test_case,
+                    "generated_test_cases": result.get("generated_test_cases", "")
+                })
+                
+            return {
+                "status": "success",
+                "results": results
+            }
+        except Exception as e:
+            logger.error(f"批量转换测试用例时出错: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }

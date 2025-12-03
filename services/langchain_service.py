@@ -130,22 +130,26 @@ class LangChainService:
 
     def analyze_test_results(self, test_report: str, execution_result, prompt_template: str = None) -> str:
         """分析测试结果"""
-        if prompt_template:
-            # 使用自定义提示词模板
-            prompt = PromptTemplate.from_template(prompt_template)
-        else:
-            # 使用默认提示词模板
-            prompt = self.create_ai_analysis_prompt()
-        # 简化的chain创建方式
-        inputs = {
-            "html_report_content": test_report,
-            "success": execution_result.success,
-            "output": execution_result.output,
-            "error": execution_result.error or ""
-        }
-        formatted_prompt = prompt.format(**inputs)
-        response = self.llm.invoke(formatted_prompt)
-        return response.content
+        try:
+            if prompt_template:
+                # 使用自定义提示词模板
+                prompt = PromptTemplate.from_template(prompt_template)
+            else:
+                # 使用默认提示词模板
+                prompt = self.create_ai_analysis_prompt()
+            # 简化的chain创建方式
+            inputs = {
+                "html_report_content": test_report,
+                "success": execution_result.success,
+                "output": execution_result.output,
+                "error": execution_result.error or ""
+            }
+            formatted_prompt = prompt.format(**inputs)
+            response = self.llm.invoke(formatted_prompt)
+            return response.content
+        except Exception as e:
+            print(f"分析测试结果时出错: {e}")
+            raise
 
     def extract_test_cases_from_excel(self, file_path: str) -> str:
         """从Excel文件中提取测试用例"""

@@ -128,7 +128,7 @@
             
             <!-- 区域3: 执行结果与应答报文展示区域 -->
             <section class="region region-3">
-                <h2>查看测试报告 <button id="view-hrp-report-btn" style="display: none; margin-left: 10px; float: right;" class="header-link">查看HRP执行报告</button></h2>
+                <h2>查看测试报告 <button id="view-hrp-report-btn" style="display: none; margin-left: 10px; float: right;" class="header-link">查看测试执行报告</button></h2>
                 <div class="region-content">
                     <div class="execution-output" id="execution-output" style="display: none;">
                         <h3>执行结果</h3>
@@ -157,8 +157,30 @@
                     <button id="ai-analysis-btn" style="display: none;">AI分析测试结果</button>
                     <div class="ai-analysis-section" id="ai-analysis-section" style="display: none;">
                         <h3>AI 分析结果</h3>
+                        <!-- 添加标签页按钮 -->
+                        <div class="tab-buttons">
+                            <button class="tab-button active" data-tab="first-part">第一部分</button>
+                            <button class="tab-button" data-tab="second-part">第二部分</button>
+                            <button class="tab-button" data-tab="third-part">第三部分</button>
+                            <button class="tab-button" data-tab="summary">总结</button>
+                        </div>
                         <div class="ai-analysis-container">
-                            <div id="ai-analysis-content" class="ai-analysis-content"></div>
+                            <div class="analysis-part" id="first-part" style="display: block;">
+                                <h4>第一部分：测试案例分析</h4>
+                                <div id="first-part-content" class="part-content"></div>
+                            </div>
+                            <div class="analysis-part" id="second-part" style="display: none;">
+                                <h4>第二部分：测试结果分析</h4>
+                                <div id="second-part-content" class="part-content"></div>
+                            </div>
+                            <div class="analysis-part" id="third-part" style="display: none;">
+                                <h4>第三部分：指导建议</h4>
+                                <div id="third-part-content" class="part-content"></div>
+                            </div>
+                            <div class="analysis-part" id="summary" style="display: none;">
+                                <h4>总结</h4>
+                                <div id="summary-content" class="part-content"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

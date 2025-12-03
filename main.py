@@ -142,6 +142,16 @@ class AIAnalysisResponse(BaseModel):
     analysis: str
     error: Optional[str] = None
 
+class StructuredAIAnalysisResponse(BaseModel):
+    """结构化AI分析结果响应模型"""
+    success: bool
+    # 各部分分析结果
+    first_part: str = ""  # 第一部分
+    second_part: str = ""  # 第二部分
+    third_part: str = ""  # 第三部分
+    summary: str = ""  # 总结
+    error: Optional[str] = None
+
 @app.post("/api/v1/convert-test-case", response_model=TestCaseResponse)
 async def convert_test_case(request: TestCaseRequest):
     """转换单个测试用例"""
@@ -152,6 +162,10 @@ async def convert_test_case(request: TestCaseRequest):
             generator_prompt_template=request.generator_prompt_template,
             generation_type=request.generation_type
         )
+        
+        # 检查是否有错误
+        if result.get("status") == "error":
+            raise HTTPException(status_code=500, detail=f"处理测试用例时出错: {result.get('error')}")
         
         return TestCaseResponse(**result)
     except Exception as e:
@@ -253,6 +267,46 @@ async def analyze_test_results(request: AIAnalysisRequest):
         return AIAnalysisResponse(
             success=False,
             analysis="",
+            error=str(e)
+        )
+
+@app.post("/api/v1/analyze-results-structured", response_model=StructuredAIAnalysisResponse)
+async def analyze_test_results_structured(request: AIAnalysisRequest):
+    """分析测试结果并返回结构化数据"""
+    try:
+        # 读取测试报告内容
+        test_report_content = ""
+        if request.test_report_path and os.path.exists(request.test_report_path):
+            with open(request.test_report_path, 'r', encoding='utf-8') as f:
+                test_report_content = f.read()
+        
+        # 调用LangChain服务进行分析
+        analysis = langchain_service.analyze_test_results(
+            test_report=test_report_content,
+            execution_result=request.execution_result
+        )
+        
+        # 解析分析结果
+        parsed_result = parse_ai_analysis_result(analysis)
+        
+        # 缓存AI分析报告到根路径的MD文件
+        cache_ai_analysis_report(parsed_result)
+        
+        return StructuredAIAnalysisResponse(
+            success=True,
+            first_part=parsed_result["first_part"],
+            second_part=parsed_result["second_part"],
+            third_part=parsed_result["third_part"],
+            summary=parsed_result["summary"],
+            error=None
+        )
+    except Exception as e:
+        return StructuredAIAnalysisResponse(
+            success=False,
+            first_part="",
+            second_part="",
+            third_part="",
+            summary="",
             error=str(e)
         )
 
@@ -465,6 +519,99 @@ async def get_latest_report():
 async def health_check():
     """健康检查接口"""
     return {"status": "healthy"}
+
+def cache_ai_analysis_report(parsed_result: dict) -> None:
+    """
+    缓存AI分析报告到根路径的MD文件
+    
+    Args:
+        parsed_result: 解析后的AI分析结果字典
+    """
+    try:
+        # 构建报告内容
+        report_content = f"""# AI测试分析报告
+
+## 第一部分：测试案例分析
+
+{parsed_result.get('first_part', '').replace('：测试案例分析', '').replace(':测试案例分析', '').lstrip()}
+
+## 第二部分：测试结果分析
+
+{parsed_result.get('second_part', '').replace('：测试结果分析', '').replace(':测试结果分析', '').lstrip()}
+
+## 第三部分：指导建议
+
+{parsed_result.get('third_part', '').replace('：指导建议', '').replace(':指导建议', '').lstrip()}
+
+## 总结
+
+{parsed_result.get('summary', '').replace('：总结', '').replace(':总结', '').lstrip()}
+"""
+        
+        # 写入到根路径的analysis_report.md文件
+        with open("analysis_report.md", "w", encoding="utf-8") as f:
+            f.write(report_content)
+            
+    except Exception as e:
+        # 记录错误但不中断主流程
+        logger.error(f"缓存AI分析报告时出错: {e}")
+
+def parse_ai_analysis_result(analysis_text: str) -> dict:
+    """
+    解析AI分析结果，按照指定标识分割内容
+    
+    Args:
+        analysis_text: AI生成的分析文本
+        
+    Returns:
+        dict: 包含各部分分析结果的字典
+    """
+    # 初始化各部分内容
+    result = {
+        "first_part": "",
+        "second_part": "",
+        "third_part": "",
+        "summary": ""
+    }
+    
+    # 定义分割标识
+    markers = ["第一部分", "第二部分", "第三部分", "总结"]
+    
+    # 查找各部分位置
+    positions = []
+    for marker in markers:
+        pos = analysis_text.find(marker)
+        positions.append((marker, pos))
+    
+    # 过滤掉未找到的部分
+    positions = [(marker, pos) for marker, pos in positions if pos != -1]
+    
+    # 按位置排序
+    positions.sort(key=lambda x: x[1])
+    
+    # 提取各部分内容
+    for i in range(len(positions)):
+        marker, start_pos = positions[i]
+        # 找到下一个部分的开始位置，如果没有则是文本末尾
+        end_pos = positions[i+1][1] if i+1 < len(positions) else len(analysis_text)
+        
+        # 提取内容（去掉标识本身）
+        content = analysis_text[start_pos:end_pos].strip()
+        # 移除标识前缀
+        if content.startswith(marker):
+            content = content[len(marker):].strip()
+        
+        # 根据标识分配到对应部分
+        if marker == "第一部分":
+            result["first_part"] = content
+        elif marker == "第二部分":
+            result["second_part"] = content
+        elif marker == "第三部分":
+            result["third_part"] = content
+        elif marker == "总结":
+            result["summary"] = content
+    
+    return result
 
 if __name__ == "__main__":
     import uvicorn

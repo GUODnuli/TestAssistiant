@@ -16,7 +16,7 @@ class Config:
     AZURE_OPENAI_DEPLOYMENT_NAME: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "")
     
     # Qwen模型配置
-    QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "sk-27d4a0ea78a84a6f92b02d84521e32c7")
+    QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "sk-337d2b287cdc4631b2de9c97618e5e23")
     ALIYUN_BASE_URL: str = os.getenv("ALIYUN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
     QWEN3_MAX: str = os.getenv("QWEN3_MAX", "qwen3-max")
     

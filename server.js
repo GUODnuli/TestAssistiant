@@ -67,6 +67,53 @@ app.get('/api/prompts', (req, res) => {
   }
 });
 
+// 获取通用提示词数据的API端点
+app.get('/api/generic-prompts', (req, res) => {
+  try {
+    const promptsConfigPath = path.join(__dirname, 'config', 'generic_prompt_config.json');
+    const promptsData = JSON.parse(fs.readFileSync(promptsConfigPath, 'utf8'));
+    
+    // 定义每个提示词模板的功能和用途说明
+    const promptFunctions = {
+      "test_case_generator": {
+        "function": "通用测试要点生成",
+        "purpose": "根据业务需求文档生成通用的测试要点，适用于各种场景"
+      },
+      "script_generator": {
+        "function": "通用测试脚本生成",
+        "purpose": "将测试要点转换为可执行的自动化测试脚本"
+      },
+      "ai_analysis": {
+        "function": "通用测试结果分析",
+        "purpose": "对测试执行结果进行分析并生成通用的分析报告"
+      }
+    };
+    
+    // 转换数据格式以便前端展示，按照指定顺序排列
+    const orderedKeys = ['test_case_generator', 'script_generator', 'ai_analysis'];
+    const promptList = orderedKeys.map(key => {
+      const prompt = promptsData[key];
+      const funcInfo = promptFunctions[key] || {};
+      return {
+        id: key,
+        name: prompt.name,
+        description: prompt.description,
+        template: prompt.template,
+        role: prompt.role,
+        techStack: prompt.tech_stack,
+        variables: prompt.variables || [],
+        function: funcInfo.function || "",
+        purpose: funcInfo.purpose || ""
+      };
+    });
+    
+    res.json({ prompts: promptList });
+  } catch (error) {
+    console.error('Error reading generic prompts config:', error);
+    res.status(500).json({ error: 'Failed to load generic prompts data' });
+  }
+});
+
 // 处理所有其他路由，返回index.html
 app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'static', 'index.html'));
