@@ -22,7 +22,7 @@ const PORT_CONFIG = {
     FRONTEND_PORT: parseInt(getEnvVar('FRONTEND_PORT', '8080')),
     
     // 后端服务端口
-    BACKEND_PORT: parseInt(getEnvVar('BACKEND_PORT', '8000')),
+    BACKEND_PORT: parseInt(getEnvVar('BACKEND_PORT', '8003')),
     
     // Allure报告服务端口
     ALLURE_PORT: parseInt(getEnvVar('ALLURE_PORT', '5000'))

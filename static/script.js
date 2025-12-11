@@ -336,7 +336,7 @@ function showLoadingState(element, isLoading) {
     } else if (element && !isLoading) {
         // 隐藏加载状态
         element.disabled = false;
-        element.textContent = '生成自动化测试脚本';
+        element.textContent = '生成测试脚本';
         element.classList.remove('loading');
     }
 }
@@ -351,7 +351,7 @@ function showMainLoadingState() {
 // 隐藏第一个区域加载状态的函数
 function hideMainLoadingState() {
     generateBtn.disabled = false;
-    generateBtn.textContent = '生成自动化测试脚本';
+    generateBtn.textContent = '生成测试脚本';
     generateBtn.classList.remove('loading');
 }
 
@@ -426,7 +426,7 @@ if (generateFromRulesBtn) {
         const businessRules = businessRulesInput?.value.trim();
         
         if (!businessRules) {
-            showError('请输入业务规则文档内容');
+            showError('请输入设计文档内容');
             businessRulesInput?.focus();
             return;
         }
@@ -478,7 +478,7 @@ executeBtn.addEventListener('click', async () => {
     const testCase = testCaseInput.value.trim();
     
     if (!script) {
-        showError('请先生成自动化测试脚本');
+        showError('请先生成测试脚本');
         return;
     }
     
@@ -546,7 +546,7 @@ executeBtn.addEventListener('click', async () => {
     } finally {
         // 恢复按钮状态
         executeBtn.classList.remove('loading');
-        executeBtn.textContent = '执行自动化测试脚本';
+        executeBtn.textContent = '执行';
     }
 });
 
@@ -603,7 +603,10 @@ function loadReport(reportUrl) {
 }
 
 // 查看测试报告按钮点击事件
-viewReportBtn.addEventListener('click', async () => {
+viewReportBtn.addEventListener('click', async (event) => {
+    // 阻止默认的表单提交行为，防止页面刷新
+    event.preventDefault();
+    
     // 显示加载状态
     viewReportBtn.disabled = true;
     viewReportBtn.textContent = '加载中...';
@@ -684,13 +687,13 @@ aiAnalysisBtn.addEventListener('click', async () => {
         // 滚动到AI分析结果区域
         aiAnalysisSection.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
-        console.error('AI分析时出错:', error);
-        document.getElementById('first-part-content').innerHTML = 'AI分析时发生错误，请稍后重试。';
+        console.error('分析时出错:', error);
+        document.getElementById('first-part-content').innerHTML = '分析时发生错误，请稍后重试。';
         aiAnalysisSection.style.display = 'block';
     } finally {
         // 恢复按钮状态
         aiAnalysisBtn.classList.remove('loading');
-        aiAnalysisBtn.textContent = 'AI 结果分析';
+        aiAnalysisBtn.textContent = '结果分析';
     }
 });
 
@@ -790,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function generateTestPointsFromRules(businessRules) { // 函数名保持不变以避免引用错误
     console.log('generateTestPointsFromRules called with:', businessRules);
     if (!businessRules) {
-        alert('请输入业务规则文档内容');
+        alert('请输入设计文档内容');
         return;
     }
     
@@ -842,7 +845,7 @@ async function generateTestPointsFromRules(businessRules) { // 函数名保持�
     } finally {
         // 隐藏加载状态 - 只在生成测试要点的按钮上隐藏
         generateFromRulesBtn.disabled = false;
-        generateFromRulesBtn.textContent = 'AI生成测试要点';
+        generateFromRulesBtn.textContent = '生成测试要点';
         generateFromRulesBtn.classList.remove('loading');
     }
 }

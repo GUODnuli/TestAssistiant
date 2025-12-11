@@ -441,20 +441,35 @@ code {
 .tab-buttons {
     display: flex;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .tab-button {
     flex: 1;
+    min-width: 200px;
     background-color: #e0e0e0; /* 普通状态为淡灰色 */
     border: 1px solid #ccc;
     border-radius: 5px 5px 0 0;
     padding: 10px 15px;
-    margin: 0 2px;
+    margin: 0 2px 5px 2px;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     color: #333;
+}
+
+/* 响应式设计：在小屏幕上堆叠按钮 */
+@media (max-width: 768px) {
+    .tab-buttons {
+        flex-direction: column;
+    }
+    
+    .tab-button {
+        margin: 2px 0;
+        min-width: auto;
+        border-radius: 5px;
+    }
 }
 
 .tab-button:first-child {
@@ -666,12 +681,4 @@ code {
     padding: 10px;
     margin: 10px 0;
     border-radius: 0 4px 4px 0;
-}
-
-/* 文件上传说明文字样式 */
-.file-upload-note {
-    font-size: 0.85rem;
-    color: #7f8c8d;
-    margin-top: 5px;
-    font-style: italic;
 }

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -40,7 +41,7 @@ app.add_middleware(
 app.mount("/allure-results", StaticFiles(directory="allure-results"), name="allure-results")
 app.mount("/allure-report", StaticFiles(directory="allure-report"), name="allure-report")
 # 挂载静态文件目录以提供前端页面访问
-app.mount("/static", StaticFiles(directory=".", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 # 挂载results目录以提供hrp测试报告访问
 app.mount("/results", StaticFiles(directory="results"), name="results")
 
@@ -48,6 +49,16 @@ app.mount("/results", StaticFiles(directory="results"), name="results")
 test_case_service = TestCaseConversionService()
 langchain_service = LangChainService()
 test_case_management_service = TestCaseManagementService()
+
+@app.get("/")
+async def root():
+    """根路径重定向到静态文件页面"""
+    return RedirectResponse(url="/static/index.html")
+
+@app.get("/index.html")
+async def index():
+    """index.html路径重定向到静态文件页面"""
+    return RedirectResponse(url="/static/index.html")
 
 class SeparateTestPointsRequest(BaseModel):
     test_cases_content: str
@@ -205,7 +216,7 @@ async def execute_test_script(request: TestExecutionRequest):
             raise HTTPException(status_code=404, detail="在demo/testcases/目录下未找到.yml文件")
         
         # 使用指定路径的hrp工具执行测试并生成HTML报告
-        hrp_path = "C:\\Users\\62411\\Project\\LLMProjects\\TestAssistiant\\hrp-v4.3.5-windows-amd64\\hrp.exe"
+        hrp_path = "./hrp-v4.3.5-darwin-amd64/hrp"
         
         # 构建命令，将所有yml文件作为参数
         cmd = [hrp_path, 'run'] + yml_files + ['--gen-html-report']
